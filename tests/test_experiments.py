@@ -136,6 +136,7 @@ def test_leverage_score_sampling_reduction(tmp_path):
         max_size=5,
         step_size=1,
         num_runs=1,
+        only_compute_once=False,
     )
 
     for cur_config in experiment.get_config_grid():

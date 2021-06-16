@@ -42,10 +42,28 @@ def compute_leverage_scores(X: np.ndarray):
 
 
 def leverage_score_sampling(
-    X: np.ndarray, y: np.ndarray, sample_size: int, augmented: bool = False
+    X: np.ndarray,
+    y: np.ndarray,
+    sample_size: int,
+    augmented: bool = False,
+    precomputed_scores: np.ndarray = None,
 ):
     """
     Draw a leverage score weighted sample of X and y without replacement.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        Data Matrix
+    y : np.ndarray
+        Label vector
+    sample_size : int
+        Sample size
+    augmented : bool
+        Wether to add the additive 1 / |W| term
+    precomputed_scores : np.ndarray
+        To avoid recomputing the leverage scores every time,
+        pass the precomputed scores here.
 
     Returns
     -------
@@ -54,7 +72,10 @@ def leverage_score_sampling(
     """
     _check_sample(X, y, sample_size)
 
-    leverage_scores = compute_leverage_scores(X)
+    if precomputed_scores is None:
+        leverage_scores = compute_leverage_scores(X)
+    else:
+        leverage_scores = precomputed_scores
 
     if augmented:
         leverage_scores += 1 / X.shape[0]
