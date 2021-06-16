@@ -78,7 +78,7 @@ def leverage_score_sampling(
         leverage_scores = precomputed_scores
 
     if augmented:
-        leverage_scores += 1 / X.shape[0]
+        leverage_scores = leverage_scores + 1 / X.shape[0]
 
     sample_indices = _rng.choice(
         X.shape[0],
