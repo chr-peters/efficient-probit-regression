@@ -144,7 +144,7 @@ class BaseDataset(abc.ABC):
         return self.beta_opt
 
 
-class Covertype_Sklearn(BaseDataset):
+class Covertype(BaseDataset):
     """
     Dataset Homepage:
     https://archive.ics.uci.edu/ml/datasets/Covertype
@@ -167,7 +167,7 @@ class Covertype_Sklearn(BaseDataset):
         super().__init__(use_caching=use_caching)
 
     def get_name(self):
-        return "covertype_sklearn"
+        return "covertype"
 
     def load_X_y(self):
         _logger.info("Fetching covertype from sklearn...")
@@ -195,7 +195,7 @@ class Covertype_Sklearn(BaseDataset):
         return X, y
 
 
-class KDDCup_Sklearn(BaseDataset):
+class KDDCup(BaseDataset):
     """
     Dataset Homepage:
     https://kdd.ics.uci.edu/databases/kddcup99/kddcup99.html
@@ -252,7 +252,7 @@ class KDDCup_Sklearn(BaseDataset):
         super().__init__(use_caching=use_caching)
 
     def get_name(self):
-        return "kddcup_sklearn"
+        return "kddcup"
 
     def load_X_y(self):
         _logger.info("Fetching kddcup from sklearn...")
@@ -280,7 +280,7 @@ class KDDCup_Sklearn(BaseDataset):
         return X, y
 
 
-class Webspam_libsvm(BaseDataset):
+class Webspam(BaseDataset):
     """
     Dataset Source:
     https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#webspam
@@ -294,9 +294,9 @@ class Webspam_libsvm(BaseDataset):
 
     def get_name(self):
         if self.drop_sparse_columns:
-            return "webspam_libsvm_desparsed"
+            return "webspam"
         else:
-            return "webspam_libsvm"
+            return "webspam_with_sparse"
 
     def get_raw_path(self):
         return self.cache_dir / f"{self.get_name()}.csv"
