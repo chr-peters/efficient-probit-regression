@@ -93,8 +93,7 @@ class BaseExperiment(abc.ABC):
         """
         X, y = self.dataset.get_X(), self.dataset.get_y()
         model = ProbitModel(X=X, y=y)
-        model.fit()
-        beta_opt = model.get_params()
+        beta_opt = self.dataset.get_beta_opt()
 
         def objective_function(beta):
             return model.negative_log_likelihood(beta)
