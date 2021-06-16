@@ -5,5 +5,12 @@ setup(
     version="0.1.0",
     author="Christian Peters",
     packages=find_packages(),
-    install_requires=["numpy", "pandas", "scikit-learn", "scipy", "statsmodels"],
+    install_requires=[
+        "joblib",
+        "numpy",
+        "pandas",
+        "scikit-learn",
+        "scipy",
+        "statsmodels",
+    ],
 )
