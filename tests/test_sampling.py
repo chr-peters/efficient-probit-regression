@@ -53,7 +53,7 @@ def test_leverage_score_sampling():
     X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
     y = np.array([1, 2, 4, 5])
 
-    X_sampled, y_sampled = leverage_score_sampling(X, y, sample_size=3)
+    X_sampled, y_sampled, weights = leverage_score_sampling(X, y, sample_size=3)
 
     assert X_sampled.shape == (3, 3)
     assert y_sampled.shape == (3,)
@@ -77,7 +77,9 @@ def test_leverage_score_sampling_augmented():
     X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
     y = np.array([1, 2, 4, 5])
 
-    X_sampled, y_sampled = leverage_score_sampling(X, y, sample_size=3, augmented=True)
+    X_sampled, y_sampled, weights = leverage_score_sampling(
+        X, y, sample_size=3, augmented=True
+    )
 
     assert X_sampled.shape == (3, 3)
     assert y_sampled.shape == (3,)

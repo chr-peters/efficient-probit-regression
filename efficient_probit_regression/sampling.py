@@ -50,6 +50,7 @@ def leverage_score_sampling(
     Returns
     -------
     X, y : Sample
+    w : New sample weights
     """
     _check_sample(X, y, sample_size)
 
@@ -65,4 +66,4 @@ def leverage_score_sampling(
         p=leverage_scores / np.sum(leverage_scores),
     )
 
-    return X[sample_indices], y[sample_indices]
+    return X[sample_indices], y[sample_indices], np.ones(shape=sample_size)
