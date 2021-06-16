@@ -195,7 +195,9 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
 
     def run(self, **kwargs):
         if self.only_compute_once:
+            _logger.info("Computing leverage scores upfront...")
             self._leverage_scores = compute_leverage_scores(self.dataset.get_X())
+            _logger.info("Done.")
 
         super().run(**kwargs)
 
