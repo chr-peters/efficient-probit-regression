@@ -80,11 +80,15 @@ def leverage_score_sampling(
     if augmented:
         leverage_scores = leverage_scores + 1 / X.shape[0]
 
+    p = leverage_scores / np.sum(leverage_scores)
+
+    w = 1 / (p * sample_size)
+
     sample_indices = _rng.choice(
         X.shape[0],
         size=sample_size,
         replace=False,
-        p=leverage_scores / np.sum(leverage_scores),
+        p=p,
     )
 
-    return X[sample_indices], y[sample_indices], np.ones(shape=sample_size)
+    return X[sample_indices], y[sample_indices], w[sample_indices]
