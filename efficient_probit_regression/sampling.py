@@ -67,6 +67,7 @@ def leverage_score_sampling(
     y: np.ndarray,
     sample_size: int,
     augmented: bool = False,
+    online: bool = False,
     precomputed_scores: np.ndarray = None,
 ):
     """
@@ -82,6 +83,8 @@ def leverage_score_sampling(
         Sample size
     augmented : bool
         Wether to add the additive 1 / |W| term
+    online : bool
+        Compute online leverage scores in one pass over the data
     precomputed_scores : np.ndarray
         To avoid recomputing the leverage scores every time,
         pass the precomputed scores here.
@@ -94,7 +97,10 @@ def leverage_score_sampling(
     _check_sample(X, y, sample_size)
 
     if precomputed_scores is None:
-        leverage_scores = compute_leverage_scores(X)
+        if online:
+            leverage_scores = compute_leverage_scores_online(X)
+        else:
+            leverage_scores = compute_leverage_scores(X)
     else:
         leverage_scores = precomputed_scores
 
