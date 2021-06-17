@@ -41,6 +41,27 @@ def compute_leverage_scores(X: np.ndarray):
     return leverage_scores
 
 
+def compute_leverage_scores_online(X: np.ndarray):
+    if not len(X.shape) == 2:
+        raise ValueError("X must be 2D!")
+
+    n = X.shape[0]
+    d = X.shape[1]
+    ATA = np.zeros(shape=(d, d))
+    leverage_scores = []
+    for i in range(n):
+        cur_column_vec = X[i][np.newaxis, :]
+        ATA += cur_column_vec.T @ cur_column_vec
+        try:
+            cur_leverage_score = np.dot(X[i], np.linalg.solve(ATA, X[i]))
+        except np.linalg.LinAlgError:
+            # singular matrix, use least squares
+            cur_leverage_score = np.dot(X[i], np.linalg.lstsq(ATA, X[i], rcond=None)[0])
+        leverage_scores.append(cur_leverage_score)
+
+    return np.array(leverage_scores)
+
+
 def leverage_score_sampling(
     X: np.ndarray,
     y: np.ndarray,

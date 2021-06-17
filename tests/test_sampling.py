@@ -1,9 +1,13 @@
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
+from sklearn.datasets import load_iris
 
 from efficient_probit_regression import leverage_score_sampling, uniform_sampling
-from efficient_probit_regression.sampling import compute_leverage_scores
+from efficient_probit_regression.sampling import (
+    compute_leverage_scores,
+    compute_leverage_scores_online,
+)
 
 
 def test_uniform_sampling_invalid_shapes():
@@ -121,6 +125,35 @@ def test_compute_leverage_scores():
 
     assert leverage_scores.shape == (4,)
     assert_allclose(leverage_scores, true_leverage_scores)
+
+
+def test_compute_leverage_scores_online():
+    X = np.array([[13, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
+    true_leverage_scores = compute_leverage_scores(X)
+
+    online_leverage_scores = compute_leverage_scores_online(X)
+
+    assert online_leverage_scores.shape == (4,)
+
+    # test that online leverage scores are upper bounds
+    assert np.all(online_leverage_scores >= true_leverage_scores)
+
+
+def test_compute_leverage_scores_online_iris():
+    X, _ = load_iris(return_X_y=True)
+
+    true_leverage_scores = compute_leverage_scores(X)
+
+    online_leverage_scores = compute_leverage_scores_online(X)
+
+    print(true_leverage_scores)
+    print(online_leverage_scores)
+    print(online_leverage_scores >= true_leverage_scores)
+
+    assert online_leverage_scores.shape == (150,)
+
+    # test that online leverage scores are upper bounds
+    assert np.all(online_leverage_scores >= true_leverage_scores)
 
 
 def test_leverage_scores_indifferent_of_labeling():
