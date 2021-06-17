@@ -8,7 +8,12 @@ from joblib import Parallel, delayed
 from . import settings
 from .datasets import BaseDataset
 from .probit_model import ProbitModel
-from .sampling import compute_leverage_scores, leverage_score_sampling, uniform_sampling
+from .sampling import (
+    compute_leverage_scores,
+    compute_leverage_scores_online,
+    leverage_score_sampling,
+    uniform_sampling,
+)
 
 _logger = settings.get_logger()
 
@@ -182,6 +187,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         dataset: BaseDataset,
         results_filename,
         only_compute_once=True,
+        online=False,
     ):
         super().__init__(
             num_runs=num_runs,
@@ -192,11 +198,18 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             results_filename=results_filename,
         )
         self.only_compute_once = only_compute_once
+        self.online = online
 
     def run(self, **kwargs):
         if self.only_compute_once:
-            _logger.info("Computing leverage scores upfront...")
-            self._leverage_scores = compute_leverage_scores(self.dataset.get_X())
+            if self.online:
+                _logger.info("Computing online leverage scores upfront...")
+                self._leverage_scores = compute_leverage_scores_online(
+                    self.dataset.get_X()
+                )
+            else:
+                _logger.info("Computing leverage scores upfront...")
+                self._leverage_scores = compute_leverage_scores(self.dataset.get_X())
             _logger.info("Done.")
 
         super().run(**kwargs)
@@ -215,6 +228,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             y=y,
             sample_size=size,
             augmented=True,
+            online=self.online,
             precomputed_scores=precomputed_scores,
         )
 
