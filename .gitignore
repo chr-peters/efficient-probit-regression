@@ -1,3 +1,5 @@
 *.pyc
 
 efficient_probit_regression.egg-info/
+
+.coverage

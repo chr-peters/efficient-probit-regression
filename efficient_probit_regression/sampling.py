@@ -120,3 +120,61 @@ def leverage_score_sampling(
     )
 
     return X[sample_indices], y[sample_indices], w[sample_indices]
+
+
+class ReservoirSampler:
+    """
+    Implementation of a reservoir sampler as described in
+    "A general purpose unequal probability sampling plan" by M. T. Chao,
+    adapted here for row sampling of datasets consisting of a data matrix X
+    and a label vector y.
+
+    Parameters
+    ----------
+    sample_size : int
+        Numer of rows in the resulting sample.
+
+    d : int
+        Second dimension of the sample.
+        The whole sample will have a dimension of sample_size x d.
+    """
+
+    def __init__(self, sample_size: int, d: int):
+        self.sample_size = sample_size
+        self.d = d
+        self._sample_X = np.empty(shape=(sample_size, d))
+        self._sample_y = np.empty(shape=(sample_size,))
+        self._row_counter = 0
+        self._weight_sum = 0
+
+    def get_sample(self):
+        """
+        Returns the sample of X and the sample of y.
+        """
+        if self._row_counter < self.sample_size:
+            return (
+                self._sample_X[: self._row_counter],
+                self._sample_y[: self._row_counter],
+            )
+        return self._sample_X, self._sample_y
+
+    def insert_sample(self, row: np.ndarray, label: float, weight: float):
+        """
+        Insert a data sample consisting of a row and a label.
+        The sample will be sampled with a probability that is proportional to
+        the given weight.
+        """
+        self._weight_sum += weight
+
+        if self._row_counter < self.sample_size:
+            self._sample_X[self._row_counter] = row
+            self._sample_y[self._row_counter] = label
+            self._row_counter += 1
+            return
+
+        p = self.sample_size * weight / self._weight_sum
+        if _rng.random() < p:
+            random_index = _rng.choice(self.sample_size)
+            self._sample_X[random_index] = row
+            self._sample_y[random_index] = label
+            self._row_counter += 1

@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_array_equal
 from sklearn.datasets import load_iris
 
 from efficient_probit_regression import leverage_score_sampling, uniform_sampling
 from efficient_probit_regression.sampling import (
+    ReservoirSampler,
     compute_leverage_scores,
     compute_leverage_scores_online,
 )
@@ -172,3 +173,46 @@ def test_leverage_scores_indifferent_of_labeling():
     leverage_scores_Z = compute_leverage_scores(Z)
 
     assert_allclose(leverage_scores_X, leverage_scores_Z)
+
+
+def test_reservoir_sampler():
+    X, y = load_iris(return_X_y=True)
+
+    # test sampling the entire dataset
+    sampler = ReservoirSampler(sample_size=X.shape[0], d=X.shape[1])
+    for i in range(X.shape[0]):
+        sampler.insert_sample(row=X[i], label=y[i], weight=1)
+
+    X_sample, y_sample = sampler.get_sample()
+
+    assert_array_equal(X_sample, X)
+    assert_array_equal(y_sample, y)
+
+    # test sampling only one sample
+    sampler = ReservoirSampler(sample_size=X.shape[0], d=X.shape[1])
+    sampler.insert_sample(row=X[0], label=y[0], weight=1)
+    X_sample, y_sample = sampler.get_sample()
+    assert_array_equal(X_sample[0], X[0])
+    assert_array_equal(y_sample, y[0])
+
+    # test sampling only a fraction
+    sample_size = 10
+    sampler = ReservoirSampler(sample_size=sample_size, d=X.shape[1])
+    for i in range(X.shape[0]):
+        sampler.insert_sample(row=X[i], label=y[i], weight=1)
+
+    X_sample, y_sample = sampler.get_sample()
+    assert X_sample.shape == (10, X.shape[1])
+    assert y_sample.shape == (10,)
+
+    # check that the rows and labels in the sample are also in the dataset
+    for i in range(sample_size):
+        print(i)
+        cur_row = X_sample[i]
+        cur_label = y_sample[i]
+        in_dataset = False
+        for j in range(X.shape[0]):
+            if np.array_equal(cur_row, X[j]) and np.array_equal(cur_label, y[j]):
+                in_dataset = True
+                break
+        assert in_dataset
