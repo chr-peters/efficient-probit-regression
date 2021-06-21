@@ -12,6 +12,7 @@ from .sampling import (
     compute_leverage_scores,
     compute_leverage_scores_online,
     leverage_score_sampling,
+    online_ridge_leverage_score_sampling,
     uniform_sampling,
 )
 
@@ -230,6 +231,39 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             augmented=True,
             online=self.online,
             precomputed_scores=precomputed_scores,
+        )
+
+        return X_reduced, y_reduced, weights
+
+
+class OnlineRidgeLeverageScoreSamplingExperiment(BaseExperiment):
+    def __init__(
+        self,
+        num_runs,
+        min_size,
+        max_size,
+        step_size,
+        dataset: BaseDataset,
+        results_filename,
+    ):
+        super().__init__(
+            num_runs=num_runs,
+            min_size=min_size,
+            max_size=max_size,
+            step_size=step_size,
+            dataset=dataset,
+            results_filename=results_filename,
+        )
+
+    def get_reduced_X_y_weights(self, config):
+        X, y = self.dataset.get_X(), self.dataset.get_y()
+        size = config["size"]
+
+        X_reduced, y_reduced, weights = online_ridge_leverage_score_sampling(
+            X=X,
+            y=y,
+            sample_size=size,
+            augmentation_constant=1 / X.shape[0],
         )
 
         return X_reduced, y_reduced, weights
