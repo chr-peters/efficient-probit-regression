@@ -8,6 +8,7 @@ from efficient_probit_regression.sampling import (
     ReservoirSampler,
     compute_leverage_scores,
     compute_leverage_scores_online,
+    online_ridge_leverage_score_sampling,
 )
 
 
@@ -216,3 +217,16 @@ def test_reservoir_sampler():
                 in_dataset = True
                 break
         assert in_dataset
+
+
+def test_online_ridge_leverage_score_sampling():
+    X, y = load_iris(return_X_y=True)
+
+    sample_size = 10
+    X_sample, y_sample, w_sample = online_ridge_leverage_score_sampling(
+        X=X, y=y, sample_size=sample_size, augmentation_constant=1 / X.shape[0]
+    )
+
+    assert X_sample.shape == (sample_size, X.shape[1])
+    assert y_sample.shape == (sample_size,)
+    assert w_sample.shape == (sample_size,)

@@ -122,6 +122,42 @@ def leverage_score_sampling(
     return X[sample_indices], y[sample_indices], w[sample_indices]
 
 
+def online_ridge_leverage_score_sampling(
+    X: np.ndarray,
+    y: np.ndarray,
+    sample_size: int,
+    augmentation_constant: float = None,
+    lambda_ridge: float = 1e-6,
+):
+    """
+    Sample X and y proportional to the online ridge leverage scores.
+    """
+    n, d = X.shape
+
+    sampler = ReservoirSampler(sample_size=sample_size, d=d)
+
+    # always add the first sample
+    sampler.insert_sample(row=X[0], label=y[0], weight=1)
+
+    # the remaining samples
+    for i in range(1, n):
+        cur_row = X[i]
+        cur_label = y[i]
+
+        A, _ = sampler.get_sample()
+        ATA_ridge = A.T @ A + lambda_ridge * np.eye(d)
+        cur_ridge_leverage_score = np.dot(cur_row, np.linalg.solve(ATA_ridge, cur_row))
+        cur_weight = np.minimum(cur_ridge_leverage_score, 1)
+
+        if augmentation_constant is not None:
+            cur_weight += augmentation_constant
+
+        sampler.insert_sample(row=cur_row, label=cur_label, weight=cur_weight)
+
+    X_sample, y_sample = sampler.get_sample()
+    return X_sample, y_sample, np.ones(y_sample.shape)
+
+
 class ReservoirSampler:
     """
     Implementation of a reservoir sampler as described in
