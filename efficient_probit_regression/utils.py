@@ -1,6 +1,10 @@
 from . import settings
 from .datasets import BaseDataset
-from .experiments import LeverageScoreSamplingExperiment, UniformSamplingExperiment
+from .experiments import (
+    LeverageScoreSamplingExperiment,
+    OnlineRidgeLeverageScoreSamplingExperiment,
+    UniformSamplingExperiment,
+)
 
 _logger = settings.get_logger()
 
@@ -32,15 +36,14 @@ def run_experiments(dataset: BaseDataset, min_size, max_size, step_size, num_run
     )
     experiment_leverage.run(parallel=True)
 
-    _logger.info("Starting online leverage score sampling experiment")
-    experiment_leverage = LeverageScoreSamplingExperiment(
+    _logger.info("Starting online ridge leverage score sampling experiment")
+    experiment_leverage = OnlineRidgeLeverageScoreSamplingExperiment(
         min_size=min_size,
         max_size=max_size,
         step_size=step_size,
         num_runs=num_runs,
         dataset=dataset,
         results_filename=settings.RESULTS_DIR
-        / f"{dataset.get_name()}_leverage_online.csv",
-        online=True,
+        / f"{dataset.get_name()}_leverage_online_ridge.csv",
     )
     experiment_leverage.run(parallel=True)
