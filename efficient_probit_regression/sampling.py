@@ -146,11 +146,8 @@ def online_ridge_leverage_score_sampling(
 
     sampler = ReservoirSampler(sample_size=sample_size, d=d)
 
-    # always add the first sample
-    sampler.insert_record(row=X[0], label=y[0], weight=1)
-
     # the remaining samples
-    for i in range(1, n):
+    for i in range(n):
         cur_row = X[i]
         cur_label = y[i]
 
