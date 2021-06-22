@@ -134,25 +134,28 @@ def online_ridge_leverage_score_sampling(
     """
     n, d = X.shape
 
+    ATA_ridge = lambda_ridge * np.eye(d)
+
     sampler = ReservoirSampler(sample_size=sample_size, d=d)
 
     # always add the first sample
-    sampler.insert_sample(row=X[0], label=y[0], weight=1)
+    sampler.insert_record(row=X[0], label=y[0], weight=1)
 
     # the remaining samples
     for i in range(1, n):
         cur_row = X[i]
         cur_label = y[i]
 
-        A, _ = sampler.get_sample()
-        ATA_ridge = A.T @ A + lambda_ridge * np.eye(d)
         cur_ridge_leverage_score = np.dot(cur_row, np.linalg.solve(ATA_ridge, cur_row))
         cur_weight = np.minimum(cur_ridge_leverage_score, 1)
 
         if augmentation_constant is not None:
             cur_weight += augmentation_constant
 
-        sampler.insert_sample(row=cur_row, label=cur_label, weight=cur_weight)
+        sampler.insert_record(row=cur_row, label=cur_label, weight=cur_weight)
+
+        if sampler.was_last_record_sampled():
+            ATA_ridge += cur_row[:, np.newaxis] @ cur_row[np.newaxis, :]
 
     X_sample, y_sample = sampler.get_sample()
     return X_sample, y_sample, np.ones(y_sample.shape)
@@ -182,6 +185,7 @@ class ReservoirSampler:
         self._sample_y = np.empty(shape=(sample_size,))
         self._row_counter = 0
         self._weight_sum = 0
+        self._last_record_sampled = False
 
     def get_sample(self):
         """
@@ -194,10 +198,10 @@ class ReservoirSampler:
             )
         return self._sample_X, self._sample_y
 
-    def insert_sample(self, row: np.ndarray, label: float, weight: float):
+    def insert_record(self, row: np.ndarray, label: float, weight: float):
         """
-        Insert a data sample consisting of a row and a label.
-        The sample will be sampled with a probability that is proportional to
+        Insert a data record consisting of a row and a label.
+        The record will be sampled with a probability that is proportional to
         the given weight.
         """
         self._weight_sum += weight
@@ -206,6 +210,7 @@ class ReservoirSampler:
             self._sample_X[self._row_counter] = row
             self._sample_y[self._row_counter] = label
             self._row_counter += 1
+            self._last_record_sampled = True
             return
 
         p = self.sample_size * weight / self._weight_sum
@@ -214,3 +219,10 @@ class ReservoirSampler:
             self._sample_X[random_index] = row
             self._sample_y[random_index] = label
             self._row_counter += 1
+            self._last_record_sampled = True
+            return
+
+        self._last_record_sampled = False
+
+    def was_last_record_sampled(self):
+        return self._last_record_sampled

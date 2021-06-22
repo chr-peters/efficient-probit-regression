@@ -181,30 +181,39 @@ def test_reservoir_sampler():
 
     # test sampling the entire dataset
     sampler = ReservoirSampler(sample_size=X.shape[0], d=X.shape[1])
+    insert_count = 0
     for i in range(X.shape[0]):
-        sampler.insert_sample(row=X[i], label=y[i], weight=1)
+        sampler.insert_record(row=X[i], label=y[i], weight=1)
+        if sampler.was_last_record_sampled():
+            insert_count += 1
 
     X_sample, y_sample = sampler.get_sample()
 
     assert_array_equal(X_sample, X)
     assert_array_equal(y_sample, y)
+    assert insert_count == X.shape[0]
 
     # test sampling only one sample
     sampler = ReservoirSampler(sample_size=X.shape[0], d=X.shape[1])
-    sampler.insert_sample(row=X[0], label=y[0], weight=1)
+    sampler.insert_record(row=X[0], label=y[0], weight=1)
     X_sample, y_sample = sampler.get_sample()
     assert_array_equal(X_sample[0], X[0])
     assert_array_equal(y_sample, y[0])
+    assert sampler.was_last_record_sampled()
 
     # test sampling only a fraction
     sample_size = 10
     sampler = ReservoirSampler(sample_size=sample_size, d=X.shape[1])
+    insert_count = 0
     for i in range(X.shape[0]):
-        sampler.insert_sample(row=X[i], label=y[i], weight=1)
+        sampler.insert_record(row=X[i], label=y[i], weight=1)
+        if sampler.was_last_record_sampled():
+            insert_count += 1
 
     X_sample, y_sample = sampler.get_sample()
     assert X_sample.shape == (10, X.shape[1])
     assert y_sample.shape == (10,)
+    assert insert_count >= sample_size
 
     # check that the rows and labels in the sample are also in the dataset
     for i in range(sample_size):
