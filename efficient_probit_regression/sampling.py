@@ -125,7 +125,9 @@ def leverage_score_sampling(
 
 @numba.jit(nopython=True)
 def _fast_leverage_score(row, A):
-    return np.dot(row, np.linalg.solve(A, row))
+    return np.dot(
+        np.ascontiguousarray(row), np.ascontiguousarray(np.linalg.solve(A, row))
+    )
 
 
 def online_ridge_leverage_score_sampling(
