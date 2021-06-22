@@ -1,3 +1,4 @@
+import numba
 import numpy as np
 
 _rng = np.random.default_rng()
@@ -122,6 +123,11 @@ def leverage_score_sampling(
     return X[sample_indices], y[sample_indices], w[sample_indices]
 
 
+@numba.jit(nopython=True)
+def _fast_leverage_score(row, A):
+    return np.dot(row, np.linalg.solve(A, row))
+
+
 def online_ridge_leverage_score_sampling(
     X: np.ndarray,
     y: np.ndarray,
@@ -146,7 +152,7 @@ def online_ridge_leverage_score_sampling(
         cur_row = X[i]
         cur_label = y[i]
 
-        cur_ridge_leverage_score = np.dot(cur_row, np.linalg.solve(ATA_ridge, cur_row))
+        cur_ridge_leverage_score = _fast_leverage_score(cur_row, ATA_ridge)
         cur_weight = np.minimum(cur_ridge_leverage_score, 1)
 
         if augmentation_constant is not None:
