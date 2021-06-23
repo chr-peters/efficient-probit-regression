@@ -52,14 +52,18 @@ def compute_leverage_scores_online(X: np.ndarray):
     leverage_scores = []
     for i in range(n):
         cur_row = X[i]
-        ATA += cur_row[:, np.newaxis] @ cur_row[np.newaxis, :]
+        ATA += np.outer(cur_row, cur_row)
         try:
             cur_leverage_score = np.dot(cur_row, np.linalg.solve(ATA, cur_row))
+            if cur_leverage_score < 0:
+                cur_leverage_score = np.dot(
+                    cur_row, np.linalg.lstsq(ATA, cur_row, rcond=None)[0]
+                )
         except np.linalg.LinAlgError:
-            # singular matrix, use least squares
             cur_leverage_score = np.dot(
                 cur_row, np.linalg.lstsq(ATA, cur_row, rcond=None)[0]
             )
+        cur_leverage_score = np.minimum(cur_leverage_score, 1)
         leverage_scores.append(cur_leverage_score)
 
     return np.array(leverage_scores)
