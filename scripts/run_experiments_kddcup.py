@@ -4,7 +4,7 @@ from efficient_probit_regression.utils import run_experiments
 MIN_SIZE = 1000
 MAX_SIZE = 30000
 STEP_SIZE = 1000
-NUM_RUNS = 5
+NUM_RUNS = 21
 
 dataset = KDDCup()
 
