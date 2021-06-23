@@ -1,10 +1,6 @@
 from . import settings
 from .datasets import BaseDataset
-from .experiments import (
-    LeverageScoreSamplingExperiment,
-    OnlineRidgeLeverageScoreSamplingExperiment,
-    UniformSamplingExperiment,
-)
+from .experiments import LeverageScoreSamplingExperiment, UniformSamplingExperiment
 
 _logger = settings.get_logger()
 
