@@ -123,6 +123,7 @@ def leverage_score_sampling(
     X: np.ndarray,
     y: np.ndarray,
     sample_size: int,
+    rescale: bool = True,
     augmented: bool = False,
     online: bool = False,
     round_up: bool = False,
@@ -139,6 +140,8 @@ def leverage_score_sampling(
         Label vector
     sample_size : int
         Sample size
+    rescale : bool
+        Wether to add weight rescaling
     augmented : bool
         Wether to add the additive 1 / |W| term
     online : bool
@@ -172,8 +175,10 @@ def leverage_score_sampling(
 
     p = leverage_scores / np.sum(leverage_scores)
 
-    # w = 1 / (p * sample_size)
-    w = np.ones(y.shape)
+    if rescale:
+        w = 1 / (p * sample_size)
+    else:
+        w = np.ones(y.shape)
 
     sample_indices = _rng.choice(
         X.shape[0],
