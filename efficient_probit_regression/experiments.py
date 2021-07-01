@@ -189,7 +189,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         results_filename,
         only_compute_once=True,
         online=False,
-        rescale=False,
         round_up=False,
     ):
         super().__init__(
@@ -202,7 +201,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         )
         self.only_compute_once = only_compute_once
         self.online = online
-        self.rescale = rescale
         self.round_up = round_up
 
     def run(self, **kwargs):
@@ -232,7 +230,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             X=X,
             y=y,
             sample_size=size,
-            rescale=self.rescale,
             augmented=True,
             online=self.online,
             precomputed_scores=precomputed_scores,
