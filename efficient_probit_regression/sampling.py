@@ -125,6 +125,7 @@ def leverage_score_sampling(
     sample_size: int,
     augmented: bool = False,
     online: bool = False,
+    round_up: bool = False,
     precomputed_scores: np.ndarray = None,
 ):
     """
@@ -142,6 +143,8 @@ def leverage_score_sampling(
         Wether to add the additive 1 / |W| term
     online : bool
         Compute online leverage scores in one pass over the data
+    round_up : bool
+        Round the leverage scores up to the nearest power of two
     precomputed_scores : np.ndarray
         To avoid recomputing the leverage scores every time,
         pass the precomputed scores here.
@@ -163,6 +166,9 @@ def leverage_score_sampling(
 
     if augmented:
         leverage_scores = leverage_scores + 1 / X.shape[0]
+
+    if round_up:
+        leverage_scores = _round_up(leverage_scores)
 
     p = leverage_scores / np.sum(leverage_scores)
 
