@@ -21,7 +21,7 @@ experiment = LeverageScoreSamplingExperiment(
     results_filename=settings.RESULTS_DIR
     / f"{dataset.get_name()}_leverage_rounded_scaled.csv",
     only_compute_once=True,
-    online=True,
+    online=False,
     round_up=True,
     rescale=True,
 )
