@@ -6,6 +6,7 @@ from sklearn.datasets import load_iris
 from efficient_probit_regression import leverage_score_sampling, uniform_sampling
 from efficient_probit_regression.sampling import (
     ReservoirSampler,
+    _round_up,
     compute_leverage_scores,
     compute_leverage_scores_online,
     online_ridge_leverage_score_sampling,
@@ -239,3 +240,17 @@ def test_online_ridge_leverage_score_sampling():
     assert X_sample.shape == (sample_size, X.shape[1])
     assert y_sample.shape == (sample_size,)
     assert w_sample.shape == (sample_size,)
+
+
+def test_round_up():
+    x = np.array([0.1, 0.2, 0.25, 0.3, 0.4, 0.6, 0.8, 1, 2, 3, 5, 0, 0.0009765624])
+    expected = np.array(
+        [0.125, 0.25, 0.25, 0.5, 0.5, 1, 1, 1, 2, 4, 8, 0, 0.0009765625]
+    )
+
+    x_rounded = _round_up(x)
+
+    assert_array_equal(x_rounded, expected)
+
+    with pytest.raises(ValueError):
+        _round_up(np.array([1, 2, -1, 3]))

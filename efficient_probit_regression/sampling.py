@@ -69,6 +69,56 @@ def compute_leverage_scores_online(X: np.ndarray):
     return np.array(leverage_scores)
 
 
+@numba.jit(nopython=True)
+def _get_integer_multiplier(a):
+    """
+    Get the smallest power of two multiplier to make a an integer.
+    """
+    multiplier = 1
+    while not np.ceil(a) == a:
+        a *= 2
+        multiplier *= 2
+    return multiplier
+
+
+@numba.jit(nopython=True)
+def _find_msb(a):
+    """
+    Find the most significant bit of an integer a
+    """
+    if a == 0:
+        return 0
+    msb = 1
+    while (a >> 1) > 0:
+        a = a >> 1
+        msb *= 2
+    return msb
+
+
+def _round_up(x: np.ndarray) -> np.ndarray:
+    """
+    Rounds each element in x up to the nearest power of two.
+    """
+    if not np.all(x >= 0):
+        raise ValueError("All elements of x must be greater than zero!")
+
+    # multiply elements by 2 until we are dealing with whole integers
+    multipliers = np.vectorize(_get_integer_multiplier)(x)
+    result = x * multipliers
+
+    # find the most significant bit of each element
+    result_msb = np.vectorize(_find_msb)(result.astype(int))
+
+    # shift all significant bits that are smaller than the element itself
+    shift_indices = result_msb < result
+    result_msb[shift_indices] = result_msb[shift_indices] << 1
+
+    # divide back
+    result = result_msb / multipliers
+
+    return result
+
+
 def leverage_score_sampling(
     X: np.ndarray,
     y: np.ndarray,
