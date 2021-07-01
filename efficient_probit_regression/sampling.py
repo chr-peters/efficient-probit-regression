@@ -1,5 +1,6 @@
 import numba
 import numpy as np
+import scipy as sp
 
 _rng = np.random.default_rng()
 
@@ -42,14 +43,62 @@ def compute_leverage_scores(X: np.ndarray):
     return leverage_scores
 
 
-def compute_leverage_scores_online(X: np.ndarray):
-    if not len(X.shape) == 2:
-        raise ValueError("X must be 2D!")
+@numba.jit(nopython=True)
+def _check_norm_change(Q, x):
+    Q = np.ascontiguousarray(Q)
+    x = np.ascontiguousarray(x)
+    return np.abs(np.linalg.norm(Q @ x) - np.linalg.norm(x)) < 1e-6
 
+
+@numba.jit(nopython=True)
+def _fast_inv_update(M_inv, outer, x):
+    M_inv = np.ascontiguousarray(M_inv)
+    outer = np.ascontiguousarray(outer)
+    x = np.ascontiguousarray(x)
+    scalar = 1 + np.dot(x, M_inv @ x)
+    M_inv -= 1 / scalar * (M_inv @ outer @ M_inv)
+
+
+def _compute_leverage_scores_online_pinv(X: np.ndarray):
     n = X.shape[0]
     d = X.shape[1]
-    ATA = np.zeros(shape=(d, d))
+
+    M = np.zeros(shape=(d, d))
+    M_inv = np.zeros(shape=(d, d))
+    Q = np.zeros(shape=(d, d))
+
+    X = X.astype(float)
+
     leverage_scores = []
+
+    for i in range(n):
+        cur_row = X[i]
+        outer = np.outer(cur_row, cur_row)
+        M += outer
+        if _check_norm_change(Q, cur_row):
+            _fast_inv_update(M_inv, outer, cur_row)
+        else:
+            M_inv = np.linalg.pinv(M)
+            Q = sp.linalg.orth(M)
+            r = Q.shape[1]
+            if r < d:
+                Q = np.concatenate((Q, np.zeros((d, d - r))), axis=1)
+
+        cur_leverage_score = np.dot(cur_row, M_inv @ cur_row)
+        cur_leverage_score = np.minimum(cur_leverage_score, 1)
+        leverage_scores.append(cur_leverage_score)
+
+    return np.array(leverage_scores)
+
+
+def _compute_leverage_scores_online_solve(X: np.ndarray):
+    n = X.shape[0]
+    d = X.shape[1]
+
+    ATA = np.zeros(shape=(d, d))
+
+    leverage_scores = []
+
     for i in range(n):
         cur_row = X[i]
         ATA += np.outer(cur_row, cur_row)
@@ -67,6 +116,15 @@ def compute_leverage_scores_online(X: np.ndarray):
         leverage_scores.append(cur_leverage_score)
 
     return np.array(leverage_scores)
+
+
+def compute_leverage_scores_online(X: np.ndarray, method="pinv"):
+    if method == "pinv":
+        return _compute_leverage_scores_online_pinv(X)
+    elif method == "solve":
+        return _compute_leverage_scores_online_solve(X)
+    else:
+        raise ValueError("Method must be either pinv or solve!")
 
 
 def _round_up(x: np.ndarray) -> np.ndarray:

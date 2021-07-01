@@ -130,11 +130,12 @@ def test_compute_leverage_scores():
     assert_allclose(leverage_scores, true_leverage_scores)
 
 
-def test_compute_leverage_scores_online():
+@pytest.mark.parametrize("method", ["pinv", "solve"])
+def test_compute_leverage_scores_online(method):
     X = np.array([[13, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
     true_leverage_scores = compute_leverage_scores(X)
 
-    online_leverage_scores = compute_leverage_scores_online(X)
+    online_leverage_scores = compute_leverage_scores_online(X, method=method)
 
     assert online_leverage_scores.shape == (4,)
 
@@ -142,12 +143,13 @@ def test_compute_leverage_scores_online():
     assert np.all(online_leverage_scores >= true_leverage_scores)
 
 
-def test_compute_leverage_scores_online_iris():
+@pytest.mark.parametrize("method", ["pinv", "solve"])
+def test_compute_leverage_scores_online_iris(method):
     X, _ = load_iris(return_X_y=True)
 
     true_leverage_scores = compute_leverage_scores(X)
 
-    online_leverage_scores = compute_leverage_scores_online(X)
+    online_leverage_scores = compute_leverage_scores_online(X, method=method)
 
     print(true_leverage_scores)
     print(online_leverage_scores)
@@ -155,8 +157,17 @@ def test_compute_leverage_scores_online_iris():
 
     assert online_leverage_scores.shape == (150,)
 
-    # test that online leverage scores are upper bounds
-    assert np.all(online_leverage_scores >= true_leverage_scores)
+    # test that online leverage scores are upper bounds,
+    # epsilon due to numerical reasons
+    epsilon = 1e-6
+    assert np.all(online_leverage_scores >= true_leverage_scores - epsilon)
+
+
+def test_online_leverage_scores_invalid_method():
+    with pytest.raises(ValueError):
+        compute_leverage_scores_online(
+            np.array([[1, 2], [3, 4], [5, 7]]), method="something-invalid"
+        )
 
 
 def test_leverage_scores_indifferent_of_labeling():
