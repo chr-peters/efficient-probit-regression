@@ -189,7 +189,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         results_filename,
         only_compute_once=True,
         online=False,
-        round_up=False,
+        round_up=True,
     ):
         super().__init__(
             num_runs=num_runs,
