@@ -86,6 +86,7 @@ def _compute_leverage_scores_online_pinv(X: np.ndarray):
 
         cur_leverage_score = np.dot(cur_row, M_inv @ cur_row)
         cur_leverage_score = np.minimum(cur_leverage_score, 1)
+        cur_leverage_score = np.maximum(cur_leverage_score, 0)
         leverage_scores.append(cur_leverage_score)
 
     return np.array(leverage_scores)
