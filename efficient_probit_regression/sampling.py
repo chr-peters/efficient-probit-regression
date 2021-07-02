@@ -47,7 +47,7 @@ def compute_leverage_scores(X: np.ndarray):
 def _check_norm_change(Q, x):
     Q = np.ascontiguousarray(Q)
     x = np.ascontiguousarray(x)
-    return np.abs(np.linalg.norm(Q @ x) - np.linalg.norm(x)) < 1e-6
+    return np.abs(np.linalg.norm(Q.T @ x) - np.linalg.norm(x)) < 1e-6
 
 
 @numba.jit(nopython=True)
