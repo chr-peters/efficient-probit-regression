@@ -3,11 +3,13 @@ This tests the probit model using the statsmodels implementation as a reference.
 """
 import numpy as np
 import pytest
+from numpy.random import default_rng
 from numpy.testing import assert_allclose
 from sklearn.datasets import load_iris, make_classification
 from statsmodels.discrete.discrete_model import Probit as Probit_statsmodels
 
 from efficient_probit_regression import ProbitModel
+from efficient_probit_regression.probit_model import ProbitSGD
 
 X = np.array([[1, 2], [3, 4]])
 y = np.array([1, -1])
@@ -175,3 +177,35 @@ def test_heavy_hitters_convergence():
         model.fit()
 
     assert len(record) == 0
+
+
+def test_probit_sgd_iris(iris):
+    X, y = iris
+    y_0_1 = np.where(y == 1, 1, 0)
+    y_m1_1 = np.where(y == 1, 1, -1)
+
+    rng = default_rng(seed=1234)
+
+    # get the optimal parameters from the statsmodels model
+    model_statsmodels = Probit_statsmodels(y_0_1, X)
+
+    # test that the loss after 10 epochs of training is smaller than the loss after
+    # only one epoch of training
+    # and that the loss after 50 epochs of training is smaller than the loss after
+    # 10 epochs of training
+    model_sgd = ProbitSGD()
+    num_epochs = 50
+    n = X.shape[0]
+    losses = []
+    for cur_epoch in range(num_epochs):
+        for i in rng.permutation(n):  # go through the data in a random order
+            model_sgd.new_sample(x=X[i], y=y_m1_1[i])
+        if cur_epoch == 0:
+            losses.append(model_statsmodels.loglike(model_sgd.get_params()))
+        if cur_epoch == 9:
+            losses.append(model_statsmodels.loglike(model_sgd.get_params()))
+        if cur_epoch == 49:
+            losses.append(model_statsmodels.loglike(model_sgd.get_params()))
+
+    assert losses[1] > losses[0]
+    assert losses[2] > losses[1]
