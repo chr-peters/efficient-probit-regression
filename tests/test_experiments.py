@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
+import pytest
 from numpy.testing import assert_array_equal
 
 from efficient_probit_regression.datasets import BaseDataset
 from efficient_probit_regression.experiments import (
     LeverageScoreSamplingExperiment,
     OnlineRidgeLeverageScoreSamplingExperiment,
+    SGDExperiment,
     UniformSamplingExperiment,
 )
 
@@ -23,10 +25,19 @@ class ExampleDataset(BaseDataset):
         return X, y
 
 
-def test_uniform_sampling_experiment(tmp_path):
+@pytest.mark.parametrize(
+    "ExperimentClass",
+    [
+        UniformSamplingExperiment,
+        LeverageScoreSamplingExperiment,
+        OnlineRidgeLeverageScoreSamplingExperiment,
+        SGDExperiment,
+    ],
+)
+def test_experiment(tmp_path, ExperimentClass):
     dataset = ExampleDataset()
     results_filename = tmp_path / "results.csv"
-    experiment = UniformSamplingExperiment(
+    experiment = ExperimentClass(
         dataset=dataset,
         results_filename=results_filename,
         min_size=1,
@@ -69,34 +80,6 @@ def test_uniform_sampling_reduction(tmp_path):
         assert cur_X.shape[0] == cur_config["size"]
         assert cur_X.shape[1] == dataset.get_d()
         assert cur_y.shape[0] == cur_config["size"]
-
-
-def test_leverage_score_sampling_experiment(tmp_path):
-    dataset = ExampleDataset()
-    results_filename = tmp_path / "results.csv"
-    experiment = LeverageScoreSamplingExperiment(
-        dataset=dataset,
-        results_filename=results_filename,
-        min_size=1,
-        max_size=5,
-        step_size=2,
-        num_runs=3,
-    )
-    experiment.run()
-
-    df = pd.read_csv(results_filename)
-
-    run_unique, run_counts = np.unique(df["run"], return_counts=True)
-    assert_array_equal(run_unique, [1, 2, 3])
-    assert_array_equal(run_counts, [3, 3, 3])
-
-    assert np.all(df["ratio"][~df["ratio"].isna()] >= 1)
-
-    assert np.sum(df["sampling_time_s"].isna()) == 0
-    assert np.sum(df["total_time_s"].isna()) == 0
-
-    assert np.all(df["sampling_time_s"] > 0)
-    assert np.all(df["total_time_s"] > 0)
 
 
 def test_leverage_score_sampling_experiment_parallel(tmp_path):
@@ -146,31 +129,3 @@ def test_leverage_score_sampling_reduction(tmp_path):
         assert cur_y.shape[0] == cur_config["size"]
         assert cur_X.shape[1] == dataset.get_d()
         assert cur_weights.shape[0] == cur_config["size"]
-
-
-def test_online_ridge_leverage_score_sampling_experiment(tmp_path):
-    dataset = ExampleDataset()
-    results_filename = tmp_path / "results.csv"
-    experiment = OnlineRidgeLeverageScoreSamplingExperiment(
-        dataset=dataset,
-        results_filename=results_filename,
-        min_size=1,
-        max_size=5,
-        step_size=2,
-        num_runs=3,
-    )
-    experiment.run()
-
-    df = pd.read_csv(results_filename)
-
-    run_unique, run_counts = np.unique(df["run"], return_counts=True)
-    assert_array_equal(run_unique, [1, 2, 3])
-    assert_array_equal(run_counts, [3, 3, 3])
-
-    assert np.all(df["ratio"][~df["ratio"].isna()] >= 1)
-
-    assert np.sum(df["sampling_time_s"].isna()) == 0
-    assert np.sum(df["total_time_s"].isna()) == 0
-
-    assert np.all(df["sampling_time_s"] > 0)
-    assert np.all(df["total_time_s"] > 0)
