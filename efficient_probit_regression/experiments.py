@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 
 from . import settings
 from .datasets import BaseDataset
-from .probit_model import ProbitModel
+from .probit_model import ProbitModel, ProbitSGD
 from .sampling import (
     compute_leverage_scores,
     compute_leverage_scores_online,
@@ -176,6 +176,52 @@ class UniformSamplingExperiment(BaseExperiment):
         weights = np.ones(size)
 
         return X_reduced, y_reduced, weights
+
+
+class SGDExperiment(BaseExperiment):
+    def __init__(
+        self,
+        num_runs,
+        min_size,
+        max_size,
+        step_size,
+        dataset: BaseDataset,
+        results_filename,
+    ):
+        super().__init__(
+            num_runs=num_runs,
+            min_size=min_size,
+            max_size=max_size,
+            step_size=step_size,
+            dataset=dataset,
+            results_filename=results_filename,
+        )
+
+    def get_reduced_X_y_weights(self, config):
+        """
+        In SGD, no reduction is performed.
+        """
+        X, y = self.dataset.get_X(), self.dataset.get_y()
+
+        return X, y, np.ones(y.shape)
+
+    def optimize(self, X, y, w):
+        """
+        Applies SGD in one pass over the data.
+
+        Returns:
+        --------
+        params : np.ndarray
+            The parameters found by SGD.
+        """
+        n = X.shape[0]
+        sgd = ProbitSGD()
+        for i in _rng.permutation(n):  # pass over the data in random order
+            cur_sample = X[i]
+            cur_label = y[i]
+            sgd.new_sample(x=cur_sample, y=cur_label)
+
+        return sgd.get_params()
 
 
 class LeverageScoreSamplingExperiment(BaseExperiment):
