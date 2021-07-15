@@ -1,6 +1,8 @@
 import numba
 import numpy as np
 import scipy as sp
+from joblib import Parallel, delayed
+from scipy.stats import multivariate_normal, truncnorm
 
 _rng = np.random.default_rng()
 
@@ -316,3 +318,72 @@ class ReservoirSampler:
 
     def was_last_record_sampled(self):
         return self._last_record_sampled
+
+
+def truncated_normal(a, b, mean, std, size, random_state=None):
+    """
+    This is a wrapper around scipy.stats.distributions.truncnorm for
+    drawing random samples from a truncated normal distribution.
+
+    The parameters a and b specify the actual interval where the
+    probability mass is located, mean and std specify the
+    original normal distribution.
+    """
+    a_scipy = (a - mean) / std
+    b_scipy = (b - mean) / std
+    return truncnorm.rvs(
+        a=a_scipy, b=b_scipy, loc=mean, scale=std, size=size, random_state=random_state
+    )
+
+
+def gibbs_sampler_probit(
+    X: np.ndarray,
+    y: np.ndarray,
+    prior_mean: np.ndarray,
+    prior_cov: np.ndarray,
+    num_samples,
+    num_chains,
+    min_burn_in=100,
+):
+    prior_cov_inv = np.linalg.inv(prior_cov)
+    B = np.linalg.inv(prior_cov_inv + X.T @ X)
+
+    def draw_sample(latent):
+        beta_mean = B @ (prior_cov_inv @ prior_mean + X.T @ latent)
+        beta = multivariate_normal.rvs(size=1, mean=beta_mean, cov=B)
+
+        a = np.where(y == -1, -np.inf, 0)
+        b = np.where(y == -1, 0, np.inf)
+        latent_mean = X @ beta
+        latent = truncated_normal(
+            a,
+            b,
+            mean=latent_mean,
+            std=1,
+            size=latent.shape[0],
+        )
+
+        return beta, latent
+
+    def simulate_chain():
+        latent = np.zeros(y.shape)
+        burn_in = max(int(0.01 * num_samples), min_burn_in)
+        for i in range(burn_in):
+            beta, latent = draw_sample(latent)
+
+        samples = []
+        for i in range(num_samples):
+            beta, latent = draw_sample(latent)
+            samples.append(beta)
+
+        return np.array(samples)
+
+    if num_chains == 1:
+        samples = simulate_chain()
+    else:
+        sample_chunks = Parallel(n_jobs=num_chains)(
+            delayed(simulate_chain)() for i in range(num_chains)
+        )
+        samples = np.vstack(sample_chunks)
+
+    return samples

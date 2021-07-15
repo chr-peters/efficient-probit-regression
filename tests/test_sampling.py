@@ -9,7 +9,9 @@ from efficient_probit_regression.sampling import (
     _round_up,
     compute_leverage_scores,
     compute_leverage_scores_online,
+    gibbs_sampler_probit,
     online_ridge_leverage_score_sampling,
+    truncated_normal,
 )
 
 
@@ -265,3 +267,62 @@ def test_round_up():
 
     with pytest.raises(ValueError):
         _round_up(np.array([1, 2, -1, 3]))
+
+
+def test_truncated_normal():
+    result = truncated_normal(a=0, b=np.inf, mean=-3, std=10, size=100, random_state=1)
+    assert np.all(result >= 0)
+
+    result = truncated_normal(a=-np.inf, b=0, mean=0, std=10, size=100, random_state=1)
+    assert np.all(result <= 0)
+
+
+def test_gibbs_sampler_probit():
+    X, y = load_iris(return_X_y=True)
+    y = np.where(y == 1, 1, -1)
+    d = X.shape[1]
+
+    # check sample dimension of single chain
+    sample = gibbs_sampler_probit(
+        X,
+        y,
+        prior_mean=np.zeros(d),
+        prior_cov=np.eye(d),
+        num_samples=500,
+        num_chains=1,
+    )
+
+    assert sample.shape == (500, d)
+
+    # check sample dimension of multiple chains
+    sample = gibbs_sampler_probit(
+        X,
+        y,
+        prior_mean=np.zeros(d),
+        prior_cov=np.eye(d),
+        num_samples=500,
+        num_chains=4,
+    )
+
+    assert sample.shape == (2000, d)
+
+    # now use the maximum likelihood estimate as a prior and check that
+    # the posterior mean is close to the maximum likelihood estimate
+    ml_estimate = np.array([0.42271932, -1.11532803, 0.64249527, -1.71604354])
+    sample = gibbs_sampler_probit(
+        X,
+        y,
+        prior_mean=ml_estimate,
+        prior_cov=np.eye(d),
+        num_samples=500,
+        num_chains=8,
+    )
+
+    assert sample.shape == (4000, d)
+
+    sample_mean = np.mean(sample, axis=0)
+
+    print(ml_estimate)
+    print(sample_mean)
+
+    assert_allclose(sample_mean, ml_estimate, rtol=0, atol=0.1)
