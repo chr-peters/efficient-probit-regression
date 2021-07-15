@@ -12,6 +12,7 @@ from efficient_probit_regression.sampling import (
     gibbs_sampler_probit,
     online_ridge_leverage_score_sampling,
     truncated_normal,
+    truncated_normal_rejection,
 )
 
 
@@ -275,6 +276,26 @@ def test_truncated_normal():
 
     result = truncated_normal(a=-np.inf, b=0, mean=0, std=10, size=100, random_state=1)
     assert np.all(result <= 0)
+
+    result = truncated_normal(a=1, b=2, mean=1.5, std=10, size=100, random_state=1)
+    assert np.all((result >= 1) & (result <= 2))
+
+    a = np.array([1, 10, 1])
+    b = np.array([2, 11, 2])
+    result = truncated_normal(a, b, mean=0, std=1, size=3)
+
+    assert np.all((result >= a) & (result <= b))
+
+
+def test_truncated_normal_rejection():
+    result = truncated_normal_rejection(a=0, b=np.inf, mean=-3, std=10, size=100)
+    assert np.all(result >= 0)
+
+    result = truncated_normal_rejection(a=-np.inf, b=0, mean=0, std=10, size=100)
+    assert np.all(result <= 0)
+
+    result = truncated_normal_rejection(a=1, b=2, mean=3, std=1, size=100)
+    assert np.all((result > 1) & (result < 2))
 
 
 def test_gibbs_sampler_probit():

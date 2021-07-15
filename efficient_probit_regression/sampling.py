@@ -2,7 +2,7 @@ import numba
 import numpy as np
 import scipy as sp
 from joblib import Parallel, delayed
-from scipy.stats import multivariate_normal, truncnorm
+from scipy.stats import multivariate_normal, norm, truncnorm
 
 _rng = np.random.default_rng()
 
@@ -320,20 +320,84 @@ class ReservoirSampler:
         return self._last_record_sampled
 
 
-def truncated_normal(a, b, mean, std, size, random_state=None):
+def truncated_normal_rejection(
+    a: np.ndarray, b: np.ndarray, mean: np.ndarray, std: np.ndarray, size
+):
+    if not type(mean) == np.ndarray:
+        mean = np.full(shape=size, fill_value=mean)
+
+    sample = norm.rvs(loc=mean, scale=std, size=size)
+    not_in_sample = (sample < a) | (sample > b)
+    while not np.all(~not_in_sample):
+        sample[not_in_sample] = norm.rvs(
+            loc=mean[not_in_sample], scale=std, size=np.sum(not_in_sample)
+        )
+        not_in_sample = (sample < a) | (sample > b)
+    return sample
+
+
+def truncated_normal(
+    a: np.ndarray, b: np.ndarray, mean: np.ndarray, std, size, random_state=None
+):
     """
-    This is a wrapper around scipy.stats.distributions.truncnorm for
-    drawing random samples from a truncated normal distribution.
+    Use rejection sampling if the interval [a, b] covers at least a probability
+    mass of 5%.
+    Otherwise use the implementation given in scipy.stats.truncnorm.
 
     The parameters a and b specify the actual interval where the
     probability mass is located, mean and std specify the
     original normal distribution.
     """
+    if not type(mean) == np.ndarray:
+        mean = np.full(shape=size, fill_value=mean)
+    if not type(a) == np.ndarray:
+        a = np.full(shape=size, fill_value=a)
+    if not type(b) == np.ndarray:
+        b = np.full(shape=size, fill_value=b)
+
+    a_cdf = norm.cdf(a, loc=mean, scale=std)
+    b_cdf = norm.cdf(b, loc=mean, scale=std)
+    rejection_ok = (b_cdf - a_cdf) > 0.05
+    size_rejection = np.sum(rejection_ok)
+    sample = np.zeros(size)
+    sample[rejection_ok] = truncated_normal_rejection(
+        a[rejection_ok],
+        b[rejection_ok],
+        mean[rejection_ok],
+        std,
+        size=size_rejection,
+    )
+
     a_scipy = (a - mean) / std
     b_scipy = (b - mean) / std
-    return truncnorm.rvs(
-        a=a_scipy, b=b_scipy, loc=mean, scale=std, size=size, random_state=random_state
+    sample[~rejection_ok] = truncnorm.rvs(
+        a=a_scipy[~rejection_ok],
+        b=b_scipy[~rejection_ok],
+        loc=mean[~rejection_ok],
+        scale=std,
+        size=size - size_rejection,
+        random_state=random_state,
     )
+
+    return sample
+
+
+def _draw_gibbs_sample(X, y, prior_mean, prior_cov_inv, B, latent):
+    beta_mean = B @ (prior_cov_inv @ prior_mean + X.T @ latent)
+    beta = multivariate_normal.rvs(size=1, mean=beta_mean, cov=B)
+
+    a = np.where(y == -1, -np.inf, 0)
+    b = np.where(y == -1, 0, np.inf)
+    latent_mean = X @ beta
+    latent = truncated_normal(
+        a,
+        b,
+        mean=latent_mean,
+        std=1,
+        size=latent.shape[0],
+    )
+
+    return beta, latent
 
 
 def gibbs_sampler_probit(
@@ -348,32 +412,19 @@ def gibbs_sampler_probit(
     prior_cov_inv = np.linalg.inv(prior_cov)
     B = np.linalg.inv(prior_cov_inv + X.T @ X)
 
-    def draw_sample(latent):
-        beta_mean = B @ (prior_cov_inv @ prior_mean + X.T @ latent)
-        beta = multivariate_normal.rvs(size=1, mean=beta_mean, cov=B)
-
-        a = np.where(y == -1, -np.inf, 0)
-        b = np.where(y == -1, 0, np.inf)
-        latent_mean = X @ beta
-        latent = truncated_normal(
-            a,
-            b,
-            mean=latent_mean,
-            std=1,
-            size=latent.shape[0],
-        )
-
-        return beta, latent
-
     def simulate_chain():
         latent = np.zeros(y.shape)
         burn_in = max(int(0.01 * num_samples), min_burn_in)
         for i in range(burn_in):
-            beta, latent = draw_sample(latent)
+            beta, latent = _draw_gibbs_sample(
+                X, y, prior_mean, prior_cov_inv, B, latent
+            )
 
         samples = []
         for i in range(num_samples):
-            beta, latent = draw_sample(latent)
+            beta, latent = _draw_gibbs_sample(
+                X, y, prior_mean, prior_cov_inv, B, latent
+            )
             samples.append(beta)
 
         return np.array(samples)
