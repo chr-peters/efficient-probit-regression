@@ -382,24 +382,6 @@ def truncated_normal(
     return sample
 
 
-def _draw_gibbs_sample(X, y, prior_mean, prior_cov_inv, B, latent):
-    beta_mean = B @ (prior_cov_inv @ prior_mean + X.T @ latent)
-    beta = multivariate_normal.rvs(size=1, mean=beta_mean, cov=B)
-
-    a = np.where(y == -1, -np.inf, 0)
-    b = np.where(y == -1, 0, np.inf)
-    latent_mean = X @ beta
-    latent = truncated_normal(
-        a,
-        b,
-        mean=latent_mean,
-        std=1,
-        size=latent.shape[0],
-    )
-
-    return beta, latent
-
-
 def gibbs_sampler_probit(
     X: np.ndarray,
     y: np.ndarray,
@@ -407,27 +389,35 @@ def gibbs_sampler_probit(
     prior_cov: np.ndarray,
     num_samples,
     num_chains,
-    min_burn_in=100,
+    burn_in=100,
 ):
+    n, d = X.shape
     prior_cov_inv = np.linalg.inv(prior_cov)
     B = np.linalg.inv(prior_cov_inv + X.T @ X)
 
+    beta_start = np.zeros(d)  # TODO: set this to the MLE
+
     def simulate_chain():
-        latent = np.zeros(y.shape)
-        burn_in = max(int(0.01 * num_samples), min_burn_in)
-        for i in range(burn_in):
-            beta, latent = _draw_gibbs_sample(
-                X, y, prior_mean, prior_cov_inv, B, latent
+        beta = beta_start
+        samples = []
+        for i in range(num_samples + burn_in):
+            a = np.where(y == -1, -np.inf, 0)
+            b = np.where(y == -1, 0, np.inf)
+            latent_mean = X @ beta
+            latent = truncated_normal(
+                a,
+                b,
+                mean=latent_mean,
+                std=1,
+                size=n,
             )
 
-        samples = []
-        for i in range(num_samples):
-            beta, latent = _draw_gibbs_sample(
-                X, y, prior_mean, prior_cov_inv, B, latent
-            )
+            beta_mean = B @ (prior_cov_inv @ prior_mean + X.T @ latent)
+            beta = multivariate_normal.rvs(size=1, mean=beta_mean, cov=B)
+
             samples.append(beta)
 
-        return np.array(samples)
+        return np.array(samples[burn_in:])
 
     if num_chains == 1:
         samples = simulate_chain()
