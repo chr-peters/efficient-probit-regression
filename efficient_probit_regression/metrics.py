@@ -22,6 +22,9 @@ def mmd(sample_x: np.ndarray, sample_y: np.ndarray, kernel_function=gaussian_ker
     m = sample_x.shape[0]
     n = sample_y.shape[0]
 
+    sample_x = np.ascontiguousarray(sample_x)
+    sample_y = np.ascontiguousarray(sample_y)
+
     sum_x = 0
     for i in range(m):
         for j in range(m):
