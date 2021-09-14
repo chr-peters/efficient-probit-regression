@@ -148,25 +148,33 @@ def test_bayes_iris(tmp_path):
     experiment.run(results_dir=tmp_path)
 
     # assert that all files are ok
-    for cur_run in [1, 2, 3]:
-        cur_path = tmp_path / f"iris_sample_uniform_run_{cur_run}.csv"
-        assert cur_path.exists()
+    def assert_all_ok(runs):
+        for cur_run in runs:
+            cur_path = tmp_path / f"iris_sample_uniform_run_{cur_run}.csv"
+            assert cur_path.exists()
 
-        cur_df = pd.read_csv(cur_path)
+            cur_df = pd.read_csv(cur_path)
 
-        assert set(cur_df.columns) == {
-            "beta_0",
-            "beta_1",
-            "beta_2",
-            "beta_3",
-            "beta_4",
-            "size",
-            "run",
-        }
-        assert cur_df.shape == (600, 7)
-        assert set(cur_df["size"]) == {50, 75, 100}
-        assert set(cur_df["run"]) == {cur_run}
+            assert set(cur_df.columns) == {
+                "beta_0",
+                "beta_1",
+                "beta_2",
+                "beta_3",
+                "beta_4",
+                "size",
+                "run",
+            }
+            assert cur_df.shape == (600, 7)
+            assert set(cur_df["size"]) == {50, 75, 100}
+            assert set(cur_df["run"]) == {cur_run}
 
-        for cur_size in [50, 75, 100]:
-            sub_df = cur_df.loc[cur_df["size"] == cur_size]
-            assert sub_df.shape == (200, 7)
+            for cur_size in [50, 75, 100]:
+                sub_df = cur_df.loc[cur_df["size"] == cur_size]
+                assert sub_df.shape == (200, 7)
+
+    assert_all_ok([1, 2, 3])
+
+    # run the experiment again and check that no old files are overwritten
+    experiment.run(results_dir=tmp_path)
+
+    assert_all_ok([1, 2, 3, 4, 5, 6])

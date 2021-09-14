@@ -1,4 +1,5 @@
 import abc
+from pathlib import Path
 from time import perf_counter
 
 import numpy as np
@@ -353,11 +354,31 @@ class BaseExperimentBayes(abc.ABC):
         """  # noqa
         pass
 
+    def _get_latest_run(self, dir: Path):
+        """
+        This makes sure that no files are overwritten in dir, by getting the
+        latest run number.
+        """
+        file_list = dir.glob(
+            f"{self.dataset.get_name()}_sample_{self.get_method_name()}_run_*.csv"
+        )
+        max_run = 0
+        for cur_file in file_list:
+            suffix = str(cur_file).split("_")[-1]
+            cur_run = int(suffix.split(".")[0])
+            if cur_run > max_run:
+                max_run = cur_run
+
+        return max_run
+
     def run(self, results_dir=settings.RESULTS_DIR_BAYES):
         if not results_dir.exists():
             results_dir.mkdir()
 
-        for cur_run in range(1, self.num_runs + 1):
+        # make sure that no old data is overwritten
+        latest_run = self._get_latest_run(dir=results_dir)
+
+        for cur_run in range(latest_run + 1, latest_run + self.num_runs + 1):
             # create a sample for each size
             samples = []
             for cur_size in range(
