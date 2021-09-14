@@ -6,6 +6,7 @@ from numpy.testing import assert_array_equal
 from efficient_probit_regression.datasets import BaseDataset, Iris
 from efficient_probit_regression.experiments import (
     LeverageScoreSamplingExperiment,
+    LeverageScoreSamplingExperimentBayes,
     OnlineRidgeLeverageScoreSamplingExperiment,
     SGDExperiment,
     UniformSamplingExperiment,
@@ -132,9 +133,13 @@ def test_leverage_score_sampling_reduction(tmp_path):
         assert cur_weights.shape[0] == cur_config["size"]
 
 
-def test_bayes_iris(tmp_path):
+@pytest.mark.parametrize(
+    "ExperimentClass",
+    [UniformSamplingExperimentBayes, LeverageScoreSamplingExperimentBayes],
+)
+def test_bayes_iris(ExperimentClass, tmp_path):
     dataset = Iris()
-    experiment = UniformSamplingExperimentBayes(
+    experiment = ExperimentClass(
         dataset=dataset,
         num_runs=3,
         min_size=50,
@@ -150,7 +155,10 @@ def test_bayes_iris(tmp_path):
     # assert that all files are ok
     def assert_all_ok(runs):
         for cur_run in runs:
-            cur_path = tmp_path / f"iris_sample_uniform_run_{cur_run}.csv"
+            cur_path = (
+                tmp_path
+                / f"iris_sample_{experiment.get_method_name()}_run_{cur_run}.csv"
+            )
             assert cur_path.exists()
 
             cur_df = pd.read_csv(cur_path)
