@@ -11,6 +11,7 @@ from .probit_model import ProbitModel, ProbitSGD
 from .sampling import (
     compute_leverage_scores,
     compute_leverage_scores_online,
+    gibbs_sampler_probit,
     leverage_score_sampling,
     online_ridge_leverage_score_sampling,
     uniform_sampling,
@@ -316,3 +317,102 @@ class OnlineRidgeLeverageScoreSamplingExperiment(BaseExperiment):
         )
 
         return X_reduced, y_reduced, weights
+
+
+class BaseExperimentBayes(abc.ABC):
+    def __init__(
+        self,
+        dataset: BaseDataset,
+        num_runs: int,
+        min_size: int,
+        max_size: int,
+        step_size: int,
+        prior_mean: np.ndarray,
+        prior_cov: np.ndarray,
+        samples_per_chain: int,
+        num_chains: int,
+    ):
+        self.dataset = dataset
+        self.num_runs = num_runs
+        self.min_size = min_size
+        self.max_size = max_size
+        self.step_size = step_size
+        self.prior_mean = prior_mean
+        self.prior_cov = prior_cov
+        self.samples_per_chain = samples_per_chain
+        self.num_chains = num_chains
+
+    @abc.abstractmethod
+    def get_reduced_X_y(self, size):
+        pass
+
+    @abc.abstractmethod
+    def get_method_name(self):
+        """
+        Returns the name of the method, like "uniform", "leverage", or "leverage_online".
+        """  # noqa
+        pass
+
+    def run(self, results_dir=settings.RESULTS_DIR_BAYES):
+        if not results_dir.exists():
+            results_dir.mkdir()
+
+        for cur_run in range(1, self.num_runs + 1):
+            # create a sample for each size
+            samples = []
+            for cur_size in range(
+                self.min_size, self.max_size + self.step_size, self.step_size
+            ):
+                _logger.info(
+                    f"METHOD: {self.get_method_name()} - RUN: {cur_run} - SIZE: {cur_size}"  # noqa
+                )
+                _logger.info("Reducing the data...")
+                X_reduced, y_reduced = self.get_reduced_X_y(size=cur_size)
+
+                _logger.info(
+                    f"Done. Running the Gibbs sampler with NUM_CHAINS: {self.num_chains} "  # noqa
+                    f"and SAMPLES_PER_CHAIN: {self.samples_per_chain}"
+                )
+
+                cur_sample = gibbs_sampler_probit(
+                    X=X_reduced,
+                    y=y_reduced,
+                    prior_mean=self.prior_mean,
+                    prior_cov=self.prior_cov,
+                    num_samples=self.samples_per_chain,
+                    num_chains=self.num_chains,
+                    burn_in=100,
+                )
+
+                _logger.info("Done.")
+                samples.append({"size": cur_size, "sample": cur_sample})
+
+            # concatenate the samples to a dataframe
+            df_list = []
+            for cur_sample in samples:
+                cur_df = pd.DataFrame(
+                    cur_sample["sample"],
+                    columns=[f"beta_{i}" for i in range(self.dataset.get_d())],
+                )
+                cur_df["size"] = cur_sample["size"]
+                cur_df["run"] = cur_run
+                df_list.append(cur_df)
+
+            df = pd.concat(df_list, ignore_index=True)
+            df.to_csv(
+                results_dir
+                / f"{self.dataset.get_name()}_sample_{self.get_method_name()}_run_{cur_run}.csv",  # noqa
+                index=False,
+            )
+
+
+class UniformSamplingExperimentBayes(BaseExperimentBayes):
+    def get_method_name(self):
+        return "uniform"
+
+    def get_reduced_X_y(self, size):
+        X_reduced, y_reduced = uniform_sampling(
+            X=self.dataset.get_X(), y=self.dataset.get_y(), sample_size=size
+        )
+
+        return X_reduced, y_reduced
