@@ -459,3 +459,28 @@ class LeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
         )
 
         return X_reduced, y_reduced
+
+
+class OnlineLeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
+    precomputed_scores = None
+
+    def get_method_name(self):
+        return "leverage_online"
+
+    def get_reduced_X_y(self, size):
+        if self.precomputed_scores is None:
+            self.precomputed_scores = compute_leverage_scores_online(
+                self.dataset.get_X()
+            )
+
+        X_reduced, y_reduced, _ = leverage_score_sampling(
+            X=self.dataset.get_X(),
+            y=self.dataset.get_y(),
+            sample_size=size,
+            augmented=True,
+            online=True,
+            round_up=True,
+            precomputed_scores=self.precomputed_scores,
+        )
+
+        return X_reduced, y_reduced

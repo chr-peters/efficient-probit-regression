@@ -7,6 +7,7 @@ from efficient_probit_regression.datasets import BaseDataset, Iris
 from efficient_probit_regression.experiments import (
     LeverageScoreSamplingExperiment,
     LeverageScoreSamplingExperimentBayes,
+    OnlineLeverageScoreSamplingExperimentBayes,
     OnlineRidgeLeverageScoreSamplingExperiment,
     SGDExperiment,
     UniformSamplingExperiment,
@@ -135,7 +136,11 @@ def test_leverage_score_sampling_reduction(tmp_path):
 
 @pytest.mark.parametrize(
     "ExperimentClass",
-    [UniformSamplingExperimentBayes, LeverageScoreSamplingExperimentBayes],
+    [
+        UniformSamplingExperimentBayes,
+        LeverageScoreSamplingExperimentBayes,
+        OnlineLeverageScoreSamplingExperimentBayes,
+    ],
 )
 def test_bayes_iris(ExperimentClass, tmp_path):
     dataset = Iris()
