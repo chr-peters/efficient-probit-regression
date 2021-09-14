@@ -364,8 +364,7 @@ class BaseExperimentBayes(abc.ABC):
         )
         max_run = 0
         for cur_file in file_list:
-            suffix = str(cur_file).split("_")[-1]
-            cur_run = int(suffix.split(".")[0])
+            cur_run = int(cur_file.stem.split("_")[-1])
             if cur_run > max_run:
                 max_run = cur_run
 
