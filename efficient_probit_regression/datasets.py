@@ -7,7 +7,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from sklearn.datasets import fetch_covtype, fetch_kddcup99, load_svmlight_file
+from sklearn.datasets import (
+    fetch_covtype,
+    fetch_kddcup99,
+    load_iris,
+    load_svmlight_file,
+)
 from sklearn.preprocessing import scale
 
 from . import ProbitModel, settings
@@ -351,5 +356,20 @@ class Webspam(BaseDataset):
 
         # scale the features to mean 0 and variance 1
         X = scale(X)
+
+        return X, y
+
+
+class Iris(BaseDataset):
+    def __init__(self, use_caching=True):
+        super().__init__(use_caching=use_caching)
+
+    def get_name(self):
+        return "iris"
+
+    def load_X_y(self):
+        X, y = load_iris(return_X_y=True)
+        X = scale(X)
+        y = np.where(y == 1, 1, -1)
 
         return X, y
