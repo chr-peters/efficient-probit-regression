@@ -390,18 +390,10 @@ def gibbs_sampler_probit(
     num_samples,
     num_chains,
     burn_in=100,
-    sample_weights: np.ndarray = None,
 ):
     n, d = X.shape
-    if sample_weights is None:
-        sample_weights = np.ones(n)
-
     prior_cov_inv = np.linalg.inv(prior_cov)
-    B = np.linalg.inv(
-        prior_cov_inv
-        + np.multiply(X, sample_weights[:, np.newaxis]).T
-        @ np.multiply(X, sample_weights[:, np.newaxis])
-    )
+    B = np.linalg.inv(prior_cov_inv + X.T @ X)
 
     beta_start = np.zeros(d)  # TODO: set this to the MLE
 
