@@ -344,7 +344,7 @@ class BaseExperimentBayes(abc.ABC):
         self.num_chains = num_chains
 
     @abc.abstractmethod
-    def get_reduced_X_y(self, size):
+    def get_reduced_X_y_probabilities(self, size):
         pass
 
     @abc.abstractmethod
@@ -387,7 +387,11 @@ class BaseExperimentBayes(abc.ABC):
                     f"METHOD: {self.get_method_name()} - RUN: {cur_run} - SIZE: {cur_size}"  # noqa
                 )
                 _logger.info("Reducing the data...")
-                X_reduced, y_reduced = self.get_reduced_X_y(size=cur_size)
+                (
+                    X_reduced,
+                    y_reduced,
+                    probabilities,
+                ) = self.get_reduced_X_y_probabilities(size=cur_size)
 
                 _logger.info(
                     f"Done. Running the Gibbs sampler with NUM_CHAINS: {self.num_chains} "  # noqa
@@ -402,6 +406,7 @@ class BaseExperimentBayes(abc.ABC):
                     num_samples=self.samples_per_chain,
                     num_chains=self.num_chains,
                     burn_in=100,
+                    probabilities=probabilities,
                 )
 
                 _logger.info("Done.")
@@ -430,12 +435,12 @@ class UniformSamplingExperimentBayes(BaseExperimentBayes):
     def get_method_name(self):
         return "uniform"
 
-    def get_reduced_X_y(self, size):
+    def get_reduced_X_y_probabilities(self, size):
         X_reduced, y_reduced = uniform_sampling(
             X=self.dataset.get_X(), y=self.dataset.get_y(), sample_size=size
         )
 
-        return X_reduced, y_reduced
+        return X_reduced, y_reduced, np.full(size, 1 / self.dataset.get_n())
 
 
 class LeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
@@ -444,11 +449,11 @@ class LeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
     def get_method_name(self):
         return "leverage"
 
-    def get_reduced_X_y(self, size):
+    def get_reduced_X_y_probabilities(self, size):
         if self.precomputed_scores is None:
             self.precomputed_scores = compute_leverage_scores(self.dataset.get_X())
 
-        X_reduced, y_reduced, _ = leverage_score_sampling(
+        X_reduced, y_reduced, weights = leverage_score_sampling(
             X=self.dataset.get_X(),
             y=self.dataset.get_y(),
             sample_size=size,
@@ -458,7 +463,9 @@ class LeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
             precomputed_scores=self.precomputed_scores,
         )
 
-        return X_reduced, y_reduced
+        probabilities = 1 / (weights * size)
+
+        return X_reduced, y_reduced, probabilities
 
 
 class OnlineLeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
@@ -467,13 +474,13 @@ class OnlineLeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
     def get_method_name(self):
         return "leverage_online"
 
-    def get_reduced_X_y(self, size):
+    def get_reduced_X_y_probabilities(self, size):
         if self.precomputed_scores is None:
             self.precomputed_scores = compute_leverage_scores_online(
                 self.dataset.get_X()
             )
 
-        X_reduced, y_reduced, _ = leverage_score_sampling(
+        X_reduced, y_reduced, weights = leverage_score_sampling(
             X=self.dataset.get_X(),
             y=self.dataset.get_y(),
             sample_size=size,
@@ -483,4 +490,6 @@ class OnlineLeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
             precomputed_scores=self.precomputed_scores,
         )
 
-        return X_reduced, y_reduced
+        probabilities = 1 / (weights * size)
+
+        return X_reduced, y_reduced, probabilities
