@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp
 from joblib import Parallel, delayed
 from scipy.stats import multivariate_normal, norm, truncnorm
+from tqdm import tqdm
 
 _rng = np.random.default_rng()
 
@@ -325,19 +326,28 @@ def truncated_normal_rejection(
 ):
     if not type(mean) == np.ndarray:
         mean = np.full(shape=size, fill_value=mean)
+    if not type(std) == np.ndarray:
+        std = np.full(shape=size, fill_value=std)
 
     sample = norm.rvs(loc=mean, scale=std, size=size)
     not_in_sample = (sample < a) | (sample > b)
     while not np.all(~not_in_sample):
         sample[not_in_sample] = norm.rvs(
-            loc=mean[not_in_sample], scale=std, size=np.sum(not_in_sample)
+            loc=mean[not_in_sample],
+            scale=std[not_in_sample],
+            size=np.sum(not_in_sample),
         )
         not_in_sample = (sample < a) | (sample > b)
     return sample
 
 
 def truncated_normal(
-    a: np.ndarray, b: np.ndarray, mean: np.ndarray, std, size, random_state=None
+    a: np.ndarray,
+    b: np.ndarray,
+    mean: np.ndarray,
+    std: np.ndarray,
+    size,
+    random_state=None,
 ):
     """
     Use rejection sampling if the interval [a, b] covers at least a probability
@@ -350,6 +360,8 @@ def truncated_normal(
     """
     if not type(mean) == np.ndarray:
         mean = np.full(shape=size, fill_value=mean)
+    if not type(std) == np.ndarray:
+        std = np.full(shape=size, fill_value=std)
     if not type(a) == np.ndarray:
         a = np.full(shape=size, fill_value=a)
     if not type(b) == np.ndarray:
@@ -364,7 +376,7 @@ def truncated_normal(
         a[rejection_ok],
         b[rejection_ok],
         mean[rejection_ok],
-        std,
+        std[rejection_ok],
         size=size_rejection,
     )
 
@@ -374,7 +386,7 @@ def truncated_normal(
         a=a_scipy[~rejection_ok],
         b=b_scipy[~rejection_ok],
         loc=mean[~rejection_ok],
-        scale=std,
+        scale=std[~rejection_ok],
         size=size - size_rejection,
         random_state=random_state,
     )
@@ -390,19 +402,36 @@ def gibbs_sampler_probit(
     num_samples,
     num_chains,
     burn_in=100,
+    probabilities=None,
 ):
     n, d = X.shape
+
+    if probabilities is None:
+        probabilities = np.full(n, 1 / n)
+
+    factor_squared = 1 / (probabilities * n)
+
     prior_cov_inv = np.linalg.inv(prior_cov)
-    B = np.linalg.inv(prior_cov_inv + X.T @ X)
+    B = np.linalg.inv(
+        prior_cov_inv + X.T @ np.multiply(X, factor_squared[:, np.newaxis])
+    )
 
     beta_start = np.zeros(d)  # TODO: set this to the MLE
+
+    def progress_if_not_parallel(input):
+        if num_chains == 1:
+            return tqdm(input)
+        else:
+            return input
 
     def simulate_chain():
         beta = beta_start
         samples = []
-        for i in range(num_samples + burn_in):
+        for i in progress_if_not_parallel(range(num_samples + burn_in)):
             a = np.where(y == -1, -np.inf, 0)
             b = np.where(y == -1, 0, np.inf)
+
+            # sample latent variables
             latent_mean = X @ beta
             latent = truncated_normal(
                 a,
@@ -412,7 +441,9 @@ def gibbs_sampler_probit(
                 size=n,
             )
 
-            beta_mean = B @ (prior_cov_inv @ prior_mean + X.T @ latent)
+            beta_mean = B @ (
+                prior_cov_inv @ prior_mean + X.T @ (latent * factor_squared)
+            )
             beta = multivariate_normal.rvs(size=1, mean=beta_mean, cov=B)
 
             samples.append(beta)
