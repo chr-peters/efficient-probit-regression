@@ -346,4 +346,4 @@ def test_gibbs_sampler_probit():
     print(ml_estimate)
     print(sample_mean)
 
-    assert_allclose(sample_mean, ml_estimate, rtol=0, atol=0.1)
+    assert_allclose(sample_mean, ml_estimate, rtol=0, atol=0.15)
