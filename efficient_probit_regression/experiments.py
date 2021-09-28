@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 
 from . import settings
 from .datasets import BaseDataset
-from .probit_model import PGeneralizedProbitModel, ProbitSGD
+from .probit_model import PGeneralizedProbitModel, PGeneralizedProbitSGD
 from .sampling import (
     compute_leverage_scores,
     compute_leverage_scores_online,
@@ -223,7 +223,7 @@ class SGDExperiment(BaseExperiment):
             The parameters found by SGD.
         """
         n = X.shape[0]
-        sgd = ProbitSGD()
+        sgd = PGeneralizedProbitSGD(p=self.p)
         for i in _rng.permutation(n):  # pass over the data in random order
             cur_sample = X[i]
             cur_label = y[i]

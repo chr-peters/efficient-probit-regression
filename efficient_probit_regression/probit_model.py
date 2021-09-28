@@ -128,7 +128,7 @@ def _g_grad(z: np.ndarray, p):
     return results
 
 
-class ProbitSGD:
+class PGeneralizedProbitSGD:
     """
     Stochastic Gradient descent for probit regression.
     Adapts the learning rate in each iteration using inverse scaling.
@@ -144,7 +144,8 @@ class ProbitSGD:
         learning_rate = initial_learning_rate / power(cur_iteration, power_t)
     """
 
-    def __init__(self, initial_learning_rate: float = 0.1, power_t: float = 0.5):
+    def __init__(self, p, initial_learning_rate: float = 0.1, power_t: float = 0.5):
+        self.p = p
         self.initial_learning_rate = initial_learning_rate
         self.power_t = power_t
         self.cur_iteration = 0
@@ -167,9 +168,16 @@ class ProbitSGD:
             self._params = np.zeros(d)
 
         z = -y * x
-        grad = z * _g_grad(np.dot(z, self._params), p=2)
+        grad = z * _g_grad(np.dot(z, self._params), p=self.p)
         cur_learning_rate = self.initial_learning_rate / np.power(
             self.cur_iteration, self.power_t
         )
 
         self._params -= cur_learning_rate * grad
+
+
+class ProbitSGD(PGeneralizedProbitSGD):
+    def __init__(self, initial_learning_rate: float = 0.1, power_t: float = 0.5):
+        super().__init__(
+            p=2, initial_learning_rate=initial_learning_rate, power_t=power_t
+        )
