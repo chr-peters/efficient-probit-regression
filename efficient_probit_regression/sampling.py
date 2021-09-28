@@ -2,7 +2,7 @@ import numba
 import numpy as np
 import scipy as sp
 from joblib import Parallel, delayed
-from scipy.stats import multivariate_normal, norm, truncnorm
+from scipy.stats import expon, multivariate_normal, norm, truncnorm
 from tqdm import tqdm
 
 _rng = np.random.default_rng()
@@ -36,7 +36,7 @@ def uniform_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     return X[sample_indices], y[sample_indices]
 
 
-def fast_QR(X, k=1):
+def fast_QR(X, k=1, add_exponential=False, p=2):
     """
     Returns Q of a fast QR decomposition of X.
     """
@@ -46,8 +46,13 @@ def fast_QR(X, k=1):
 
     # init the sketch
     X_ = np.zeros((d ** 2, d))
-    for i in range(n):
-        X_[f[i]] += g[i] * X[i]
+    if not add_exponential:
+        for i in range(n):
+            X_[f[i]] += g[i] * X[i]
+    else:
+        for i in range(n):
+            lamb = expon.rvs()
+            X_[f[i]] += g[i] / np.power(lamb, 1 / p) * X[i]
 
     R_ = np.linalg.qr(X_, mode="r")
     R_inv = np.linalg.inv(R_)
@@ -60,14 +65,16 @@ def fast_QR(X, k=1):
     return Q_
 
 
-def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):
+def compute_leverage_scores(
+    X: np.ndarray, p=2, fast_approx=False, add_exponential=False
+):
     if not len(X.shape) == 2:
         raise ValueError("X must be 2D!")
 
     if not fast_approx:
         Q, *_ = np.linalg.qr(X)
     else:
-        Q = fast_QR(X)
+        Q = fast_QR(X, add_exponential=add_exponential, p=p)
 
     leverage_scores = np.power(np.linalg.norm(Q, axis=1, ord=p), p)
 
@@ -184,6 +191,7 @@ def leverage_score_sampling(
     precomputed_scores: np.ndarray = None,
     p=2,
     fast_approx=False,
+    add_exponential=False,
 ):
     """
     Draw a leverage score weighted sample of X and y without replacement.
@@ -217,7 +225,9 @@ def leverage_score_sampling(
         if online:
             leverage_scores = compute_leverage_scores_online(X)
         else:
-            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)
+            leverage_scores = compute_leverage_scores(
+                X, p=p, fast_approx=fast_approx, add_exponential=add_exponential
+            )
     else:
         leverage_scores = precomputed_scores
 
