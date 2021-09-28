@@ -62,7 +62,7 @@ def test_experiments(tmp_path, ExperimentClass, p):
     assert_array_equal(size_unique, [50, 75, 100])
     assert_array_equal(size_counts, [3, 3, 3])
 
-    assert np.all(df["ratio"][~df["ratio"].isna()] >= 1)
+    assert np.all(df["ratio"][~df["ratio"].isna()] >= 0.99)
 
     assert np.sum(df["sampling_time_s"].isna()) == 0
     assert np.sum(df["total_time_s"].isna()) == 0
