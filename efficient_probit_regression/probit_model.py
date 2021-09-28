@@ -5,8 +5,8 @@ from scipy.optimize import minimize
 from scipy.stats import gennorm
 
 
-class ProbitModel:
-    def __init__(self, X: np.ndarray, y: np.ndarray, w: np.ndarray = None):
+class PGeneralizedProbitModel:
+    def __init__(self, p, X: np.ndarray, y: np.ndarray, w: np.ndarray = None):
         if not set(y.astype(int)) == {-1, 1}:
             raise ValueError("Elements of y must be 1 or -1 and can't be all the same!")
 
@@ -22,18 +22,19 @@ class ProbitModel:
         self.X = X
         self.y = y
         self.w = w
+        self.p = p
         self._params = None
 
     def negative_log_likelihood(self, params: np.ndarray):
         self._check_params(params)
 
-        return np.sum(self.w * _g(-self.y * np.dot(self.X, params)))
+        return np.sum(self.w * _g(-self.y * np.dot(self.X, params), p=self.p))
 
     def gradient(self, params: np.ndarray):
         self._check_params(params)
 
         Z = -self.y[:, np.newaxis] * self.X
-        grad_vec = self.w * _g_grad(np.dot(Z, params))
+        grad_vec = self.w * _g_grad(np.dot(Z, params), p=self.p)
         grad_vec = grad_vec[:, np.newaxis]
         return np.sum(Z * grad_vec, axis=0)
 
@@ -63,22 +64,27 @@ class ProbitModel:
             raise ValueError(f"Parameter vector has invalid shape of {params.shape}")
 
 
-def _g_orig(z, p=2):
+class ProbitModel(PGeneralizedProbitModel):
+    def __init__(self, X: np.ndarray, y: np.ndarray, w: np.ndarray = None):
+        super().__init__(p=2, X=X, y=y, w=w)
+
+
+def _g_orig(z, p):
     return -np.log(gennorm.cdf(-z, beta=p, scale=np.sqrt(p)))
 
 
-def _g_replacement(z, p=2):
+def _g_replacement(z, p):
     """Replaces g if z > _CUTOFF_P[p] for numerical stability."""
     return 1 / p * np.power(z, p)
 
 
-def _g_grad_orig(z, p=2):
+def _g_grad_orig(z, p):
     return gennorm.pdf(z, beta=p, scale=np.sqrt(p)) / gennorm.cdf(
         -z, beta=p, scale=np.sqrt(p)
     )
 
 
-def _g_grad_replacement(z, p=2):
+def _g_grad_replacement(z, p):
     """Replaces g_grad if z > _CUTOFF_P[p] for numerical stability."""
     return np.power(z, p - 1)
 
@@ -100,7 +106,7 @@ def _G_GRAD_DIFF_P(p):
     return _g_grad_orig(_CUTOFF_P(p), p) - _g_grad_replacement(_CUTOFF_P(p), p)
 
 
-def _g(z: np.ndarray, p=2):
+def _g(z: np.ndarray, p):
     results = np.empty(z.shape)
     greater = z > _CUTOFF_P(p)
     results[greater] = _G_DIFF_P(p) + _g_replacement(z[greater], p)
@@ -108,7 +114,7 @@ def _g(z: np.ndarray, p=2):
     return results
 
 
-def _g_grad(z: np.ndarray, p=2):
+def _g_grad(z: np.ndarray, p):
     results = np.empty(z.shape)
     greater = z > _CUTOFF_P(p)
     results[greater] = _G_GRAD_DIFF_P(p) + _g_grad_replacement(z[greater], p)
@@ -155,7 +161,7 @@ class ProbitSGD:
             self._params = np.zeros(d)
 
         z = -y * x
-        grad = z * _g_grad(np.dot(z, self._params))
+        grad = z * _g_grad(np.dot(z, self._params), p=2)
         cur_learning_rate = self.initial_learning_rate / np.power(
             self.cur_iteration, self.power_t
         )
