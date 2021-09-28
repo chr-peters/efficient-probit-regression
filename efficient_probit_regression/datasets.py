@@ -15,7 +15,8 @@ from sklearn.datasets import (
 )
 from sklearn.preprocessing import scale
 
-from . import ProbitModel, settings
+from efficient_probit_regression import settings
+from efficient_probit_regression.probit_model import PGeneralizedProbitModel
 
 _logger = settings.get_logger()
 
@@ -38,7 +39,7 @@ class BaseDataset(abc.ABC):
 
         self.X = None
         self.y = None
-        self.beta_opt = None
+        self.beta_opt_dir = {}
         self.add_intercept = add_intercept
 
     @abc.abstractmethod
@@ -83,33 +84,33 @@ class BaseDataset(abc.ABC):
 
         return X, y
 
-    def _compute_beta_opt(self):
-        model = ProbitModel(X=self.get_X(), y=self.get_y())
+    def _compute_beta_opt(self, p):
+        model = PGeneralizedProbitModel(p=p, X=self.get_X(), y=self.get_y())
         model.fit()
         beta_opt = model.get_params()
         return beta_opt
 
-    def _get_beta_opt_cached(self):
+    def _get_beta_opt_cached(self, p):
         if not self.use_caching:
-            _logger.info("Computing beta_opt...")
-            beta_opt = self._compute_beta_opt()
+            _logger.info("Computing beta_opt for p={p}...")
+            beta_opt = self._compute_beta_opt(p)
             _logger.info("Done.")
             return beta_opt
 
-        beta_opt_path = self.get_binary_path_beta_opt()
+        beta_opt_path = self.get_binary_path_beta_opt(p)
         if beta_opt_path.exists():
             _logger.info(
-                f"Loading cached version of beta_opt found at {beta_opt_path}..."
+                f"Loading cached version of beta_opt for p={p} found at {beta_opt_path}..."
             )
             beta_opt = np.load(beta_opt_path)
             _logger.info("Done.")
             return beta_opt
 
-        _logger.info("Computing beta_opt...")
-        beta_opt = self._compute_beta_opt()
+        _logger.info("Computing beta_opt for p={p}...")
+        beta_opt = self._compute_beta_opt(p)
         _logger.info("Done.")
         np.save(beta_opt_path, beta_opt)
-        _logger.info(f"Saved beta_opt at {beta_opt_path}.")
+        _logger.info(f"Saved beta_opt for p={p} at {beta_opt_path}.")
 
         return beta_opt
 
@@ -123,8 +124,8 @@ class BaseDataset(abc.ABC):
     def get_binary_path_y(self) -> Path:
         return self.cache_dir / f"{self.get_name()}_y.npy"
 
-    def get_binary_path_beta_opt(self) -> Path:
-        return self.cache_dir / f"{self.get_name()}_beta_opt.npy"
+    def get_binary_path_beta_opt(self, p) -> Path:
+        return self.cache_dir / f"{self.get_name()}_beta_opt_p_{p}.npy"
 
     def get_X(self):
         self._assert_data_loaded()
@@ -142,11 +143,11 @@ class BaseDataset(abc.ABC):
         self._assert_data_loaded()
         return self.X.shape[1]
 
-    def get_beta_opt(self):
-        if self.beta_opt is None:
-            self.beta_opt = self._get_beta_opt_cached()
+    def get_beta_opt(self, p):
+        if p not in self.beta_opt_dir.keys():
+            self.beta_opt_dir[p] = self._get_beta_opt_cached(p)
 
-        return self.beta_opt
+        return self.beta_opt_dir[p]
 
 
 class Covertype(BaseDataset):

@@ -31,7 +31,7 @@ def test_base_dataset_no_caching_no_intercept():
     assert dataset.get_name() == "example_name"
     assert_array_equal(dataset.get_X(), X)
     assert_array_equal(dataset.get_y(), y)
-    assert_array_almost_equal(dataset.get_beta_opt(), beta_opt, decimal=4)
+    assert_array_almost_equal(dataset.get_beta_opt(p=2), beta_opt, decimal=4)
     assert dataset.get_n() == 5
     assert dataset.get_d() == 2
 
@@ -40,7 +40,7 @@ def test_base_dataset_no_caching_with_intercept():
     dataset = ExampleDataset(add_intercept=True, use_caching=False)
     assert_array_equal(dataset.get_X(), X_intercept)
     assert_array_equal(dataset.get_y(), y)
-    assert_array_almost_equal(dataset.get_beta_opt(), beta_opt_intercept, decimal=4)
+    assert_array_almost_equal(dataset.get_beta_opt(p=2), beta_opt_intercept, decimal=4)
     assert dataset.get_n() == 5
     assert dataset.get_d() == 3
 
@@ -58,6 +58,8 @@ def test_base_dataset_caching(tmp_path):
         assert dataset.get_name() == "example_name"
         assert_array_equal(dataset.get_X(), X_intercept)
         assert_array_equal(dataset.get_y(), y)
-        assert_array_almost_equal(dataset.get_beta_opt(), beta_opt_intercept, decimal=4)
+        assert_array_almost_equal(
+            dataset.get_beta_opt(p=2), beta_opt_intercept, decimal=4
+        )
         assert dataset.get_n() == 5
         assert dataset.get_d() == 3
