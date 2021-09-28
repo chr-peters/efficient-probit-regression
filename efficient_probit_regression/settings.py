@@ -13,6 +13,13 @@ RESULTS_DIR_BAYES = BASE_DIR / "experimental-results" / "bayes"
 PLOTS_DIR = BASE_DIR / "plots"
 
 
+def get_results_dir_p(p):
+    results_dir = RESULTS_DIR / f"p_{p}"
+    if not results_dir.exists():
+        results_dir.mkdir()
+    return results_dir
+
+
 _logger = None
 
 
