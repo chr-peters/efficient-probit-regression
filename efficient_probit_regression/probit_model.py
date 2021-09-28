@@ -69,8 +69,16 @@ class ProbitModel(PGeneralizedProbitModel):
         super().__init__(p=2, X=X, y=y, w=w)
 
 
+def p_gen_norm_pdf(x, p):
+    return gennorm.pdf(x, beta=p, scale=np.power(p, 1 / p))
+
+
+def p_gen_norm_cdf(x, p):
+    return gennorm.cdf(x, beta=p, scale=np.power(p, 1 / p))
+
+
 def _g_orig(z, p):
-    return -np.log(gennorm.cdf(-z, beta=p, scale=np.sqrt(p)))
+    return -np.log(p_gen_norm_cdf(-z, p))
 
 
 def _g_replacement(z, p):
@@ -79,9 +87,7 @@ def _g_replacement(z, p):
 
 
 def _g_grad_orig(z, p):
-    return gennorm.pdf(z, beta=p, scale=np.sqrt(p)) / gennorm.cdf(
-        -z, beta=p, scale=np.sqrt(p)
-    )
+    return p_gen_norm_pdf(z, p) / p_gen_norm_cdf(-z, p)
 
 
 def _g_grad_replacement(z, p):
