@@ -7,6 +7,7 @@ from efficient_probit_regression.datasets import BaseDataset, Iris
 from efficient_probit_regression.experiments import (
     LeverageScoreSamplingExperiment,
     LeverageScoreSamplingExperimentBayes,
+    LewisSamplingExperiment,
     OnlineLeverageScoreSamplingExperimentBayes,
     OnlineRidgeLeverageScoreSamplingExperiment,
     SGDExperiment,
@@ -33,6 +34,7 @@ class ExampleDataset(BaseDataset):
     [
         UniformSamplingExperiment,
         LeverageScoreSamplingExperiment,
+        LewisSamplingExperiment,
         OnlineRidgeLeverageScoreSamplingExperiment,
         SGDExperiment,
     ],
