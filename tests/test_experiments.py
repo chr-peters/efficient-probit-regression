@@ -38,9 +38,14 @@ class ExampleDataset(BaseDataset):
     ],
 )
 @pytest.mark.parametrize("p", [1, 2, 3])
-def test_experiments(tmp_path, ExperimentClass, p):
+@pytest.mark.parametrize("fast_approx", [False, True])
+def test_experiments(tmp_path, ExperimentClass, p, fast_approx):
     dataset = Iris()
     results_filename = tmp_path / "results.csv"
+
+    fast_approx_dict = {}
+    if ExperimentClass == LeverageScoreSamplingExperiment:
+        fast_approx_dict = {"fast_approx": fast_approx}
     experiment = ExperimentClass(
         p=p,
         dataset=dataset,
@@ -49,6 +54,7 @@ def test_experiments(tmp_path, ExperimentClass, p):
         max_size=100,
         step_size=25,
         num_runs=3,
+        **fast_approx_dict,
     )
     experiment.run()
 

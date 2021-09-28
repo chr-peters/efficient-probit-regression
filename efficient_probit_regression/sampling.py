@@ -36,11 +36,39 @@ def uniform_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     return X[sample_indices], y[sample_indices]
 
 
-def compute_leverage_scores(X: np.ndarray, p=2):
+def fast_QR(X, k=1):
+    """
+    Returns Q of a fast QR decomposition of X.
+    """
+    n, d = X.shape
+    f = np.random.randint(d ** 2, size=n)
+    g = np.random.randint(2, size=n) * 2 - 1
+
+    # init the sketch
+    X_ = np.zeros((d ** 2, d))
+    for i in range(n):
+        X_[f[i]] += g[i] * X[i]
+
+    R_ = np.linalg.qr(X_, mode="r")
+    R_inv = np.linalg.inv(R_)
+
+    n, d = R_inv.shape
+    g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(d, k))
+    r = np.dot(R_inv, g)
+    Q_ = np.dot(X, r)
+
+    return Q_
+
+
+def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):
     if not len(X.shape) == 2:
         raise ValueError("X must be 2D!")
 
-    Q, *_ = np.linalg.qr(X)
+    if not fast_approx:
+        Q, *_ = np.linalg.qr(X)
+    else:
+        Q = fast_QR(X)
+
     leverage_scores = np.power(np.linalg.norm(Q, axis=1, ord=p), p)
 
     return leverage_scores
@@ -155,6 +183,7 @@ def leverage_score_sampling(
     round_up: bool = False,
     precomputed_scores: np.ndarray = None,
     p=2,
+    fast_approx=False,
 ):
     """
     Draw a leverage score weighted sample of X and y without replacement.
@@ -188,7 +217,7 @@ def leverage_score_sampling(
         if online:
             leverage_scores = compute_leverage_scores_online(X)
         else:
-            leverage_scores = compute_leverage_scores(X, p=p)
+            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)
     else:
         leverage_scores = precomputed_scores
 

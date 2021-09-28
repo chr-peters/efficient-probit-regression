@@ -245,6 +245,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         only_compute_once=True,
         online=False,
         round_up=True,
+        fast_approx=False,
     ):
         super().__init__(
             p=p,
@@ -258,6 +259,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         self.only_compute_once = only_compute_once
         self.online = online
         self.round_up = round_up
+        self.fast_approx = fast_approx
 
     def run(self, **kwargs):
         if self.only_compute_once:
@@ -269,7 +271,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             else:
                 _logger.info("Computing leverage scores upfront...")
                 self._leverage_scores = compute_leverage_scores(
-                    self.dataset.get_X(), p=self.p
+                    self.dataset.get_X(), p=self.p, fast_approx=self.fast_approx
                 )
             _logger.info("Done.")
 
@@ -293,6 +295,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             precomputed_scores=precomputed_scores,
             round_up=self.round_up,
             p=self.p,
+            fast_approx=self.fast_approx,
         )
 
         return X_reduced, y_reduced, weights
