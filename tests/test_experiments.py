@@ -37,15 +37,17 @@ class ExampleDataset(BaseDataset):
         SGDExperiment,
     ],
 )
-def test_experiment(tmp_path, ExperimentClass):
-    dataset = ExampleDataset()
+@pytest.mark.parametrize("p", [1, 2, 3])
+def test_experiments(tmp_path, ExperimentClass, p):
+    dataset = Iris()
     results_filename = tmp_path / "results.csv"
     experiment = ExperimentClass(
+        p=p,
         dataset=dataset,
         results_filename=results_filename,
-        min_size=1,
-        max_size=5,
-        step_size=2,
+        min_size=50,
+        max_size=100,
+        step_size=25,
         num_runs=3,
     )
     experiment.run()
@@ -55,6 +57,10 @@ def test_experiment(tmp_path, ExperimentClass):
     run_unique, run_counts = np.unique(df["run"], return_counts=True)
     assert_array_equal(run_unique, [1, 2, 3])
     assert_array_equal(run_counts, [3, 3, 3])
+
+    size_unique, size_counts = np.unique(df["size"], return_counts=True)
+    assert_array_equal(size_unique, [50, 75, 100])
+    assert_array_equal(size_counts, [3, 3, 3])
 
     assert np.all(df["ratio"][~df["ratio"].isna()] >= 1)
 
@@ -69,6 +75,7 @@ def test_uniform_sampling_reduction(tmp_path):
     dataset = ExampleDataset()
     results_filename = tmp_path / "results.csv"
     experiment = UniformSamplingExperiment(
+        p=2,
         dataset=dataset,
         results_filename=results_filename,
         min_size=1,
@@ -89,6 +96,7 @@ def test_leverage_score_sampling_experiment_parallel(tmp_path):
     dataset = ExampleDataset()
     results_filename = tmp_path / "results.csv"
     experiment = LeverageScoreSamplingExperiment(
+        p=2,
         dataset=dataset,
         results_filename=results_filename,
         min_size=1,
@@ -117,6 +125,7 @@ def test_leverage_score_sampling_reduction(tmp_path):
     dataset = ExampleDataset()
     results_filename = tmp_path / "results.csv"
     experiment = LeverageScoreSamplingExperiment(
+        p=2,
         dataset=dataset,
         results_filename=results_filename,
         min_size=1,

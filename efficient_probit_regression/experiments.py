@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 
 from . import settings
 from .datasets import BaseDataset
-from .probit_model import ProbitModel, ProbitSGD
+from .probit_model import PGeneralizedProbitModel, ProbitSGD
 from .sampling import (
     compute_leverage_scores,
     compute_leverage_scores_online,
@@ -26,6 +26,7 @@ _rng = np.random.default_rng()
 class BaseExperiment(abc.ABC):
     def __init__(
         self,
+        p,
         num_runs,
         min_size,
         max_size,
@@ -39,6 +40,7 @@ class BaseExperiment(abc.ABC):
         self.step_size = step_size
         self.dataset = dataset
         self.results_filename = results_filename
+        self.p = p
 
     @abc.abstractmethod
     def get_reduced_X_y_weights(self, config):
@@ -87,7 +89,7 @@ class BaseExperiment(abc.ABC):
             The optimal parameters.
         """
         try:
-            model = ProbitModel(X=X, y=y, w=w)
+            model = PGeneralizedProbitModel(p=self.p, X=X, y=y, w=w)
             model.fit()
             beta_opt = model.get_params()
         except ValueError:
@@ -100,7 +102,7 @@ class BaseExperiment(abc.ABC):
         Run the experiment.
         """
         X, y = self.dataset.get_X(), self.dataset.get_y()
-        model = ProbitModel(X=X, y=y)
+        model = PGeneralizedProbitModel(p=self.p, X=X, y=y)
         beta_opt = self.dataset.get_beta_opt()
 
         def objective_function(beta):
@@ -153,6 +155,7 @@ class BaseExperiment(abc.ABC):
 class UniformSamplingExperiment(BaseExperiment):
     def __init__(
         self,
+        p,
         num_runs,
         min_size,
         max_size,
@@ -161,6 +164,7 @@ class UniformSamplingExperiment(BaseExperiment):
         results_filename,
     ):
         super().__init__(
+            p=p,
             num_runs=num_runs,
             min_size=min_size,
             max_size=max_size,
@@ -183,6 +187,7 @@ class UniformSamplingExperiment(BaseExperiment):
 class SGDExperiment(BaseExperiment):
     def __init__(
         self,
+        p,
         num_runs,
         min_size,
         max_size,
@@ -191,6 +196,7 @@ class SGDExperiment(BaseExperiment):
         results_filename,
     ):
         super().__init__(
+            p=p,
             num_runs=num_runs,
             min_size=min_size,
             max_size=max_size,
@@ -229,6 +235,7 @@ class SGDExperiment(BaseExperiment):
 class LeverageScoreSamplingExperiment(BaseExperiment):
     def __init__(
         self,
+        p,
         num_runs,
         min_size,
         max_size,
@@ -240,6 +247,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         round_up=True,
     ):
         super().__init__(
+            p=p,
             num_runs=num_runs,
             min_size=min_size,
             max_size=max_size,
@@ -290,6 +298,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
 class OnlineRidgeLeverageScoreSamplingExperiment(BaseExperiment):
     def __init__(
         self,
+        p,
         num_runs,
         min_size,
         max_size,
@@ -298,6 +307,7 @@ class OnlineRidgeLeverageScoreSamplingExperiment(BaseExperiment):
         results_filename,
     ):
         super().__init__(
+            p=p,
             num_runs=num_runs,
             min_size=min_size,
             max_size=max_size,
