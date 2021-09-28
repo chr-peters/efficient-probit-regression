@@ -268,7 +268,9 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
                 )
             else:
                 _logger.info("Computing leverage scores upfront...")
-                self._leverage_scores = compute_leverage_scores(self.dataset.get_X())
+                self._leverage_scores = compute_leverage_scores(
+                    self.dataset.get_X(), p=self.p
+                )
             _logger.info("Done.")
 
         super().run(**kwargs)
@@ -290,6 +292,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             online=self.online,
             precomputed_scores=precomputed_scores,
             round_up=self.round_up,
+            p=self.p,
         )
 
         return X_reduced, y_reduced, weights

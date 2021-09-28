@@ -36,12 +36,12 @@ def uniform_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     return X[sample_indices], y[sample_indices]
 
 
-def compute_leverage_scores(X: np.ndarray):
+def compute_leverage_scores(X: np.ndarray, p=2):
     if not len(X.shape) == 2:
         raise ValueError("X must be 2D!")
 
     Q, *_ = np.linalg.qr(X)
-    leverage_scores = np.linalg.norm(Q, axis=1) ** 2
+    leverage_scores = np.power(np.linalg.norm(Q, axis=1, ord=p), p)
 
     return leverage_scores
 
@@ -154,6 +154,7 @@ def leverage_score_sampling(
     online: bool = False,
     round_up: bool = False,
     precomputed_scores: np.ndarray = None,
+    p=2,
 ):
     """
     Draw a leverage score weighted sample of X and y without replacement.
@@ -187,7 +188,7 @@ def leverage_score_sampling(
         if online:
             leverage_scores = compute_leverage_scores_online(X)
         else:
-            leverage_scores = compute_leverage_scores(X)
+            leverage_scores = compute_leverage_scores(X, p=p)
     else:
         leverage_scores = precomputed_scores
 
