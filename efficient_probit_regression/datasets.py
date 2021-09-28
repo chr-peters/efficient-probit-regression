@@ -92,7 +92,7 @@ class BaseDataset(abc.ABC):
 
     def _get_beta_opt_cached(self, p):
         if not self.use_caching:
-            _logger.info("Computing beta_opt for p={p}...")
+            _logger.info(f"Computing beta_opt for p={p}...")
             beta_opt = self._compute_beta_opt(p)
             _logger.info("Done.")
             return beta_opt
@@ -100,13 +100,13 @@ class BaseDataset(abc.ABC):
         beta_opt_path = self.get_binary_path_beta_opt(p)
         if beta_opt_path.exists():
             _logger.info(
-                f"Loading cached version of beta_opt for p={p} found at {beta_opt_path}..."
+                f"Loading cached version of beta_opt for p={p} found at {beta_opt_path}..."  # noqa
             )
             beta_opt = np.load(beta_opt_path)
             _logger.info("Done.")
             return beta_opt
 
-        _logger.info("Computing beta_opt for p={p}...")
+        _logger.info(f"Computing beta_opt for p={p}...")
         beta_opt = self._compute_beta_opt(p)
         _logger.info("Done.")
         np.save(beta_opt_path, beta_opt)
