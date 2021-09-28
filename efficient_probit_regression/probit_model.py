@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 from scipy.optimize import minimize
-from scipy.stats import norm
+from scipy.stats import gennorm
 
 
 class ProbitModel:
@@ -63,39 +63,56 @@ class ProbitModel:
             raise ValueError(f"Parameter vector has invalid shape of {params.shape}")
 
 
-def _g_orig(z):
-    return -np.log(norm.cdf(-z))
+def _g_orig(z, p=2):
+    return -np.log(gennorm.cdf(-z, beta=p, scale=np.sqrt(p)))
 
 
-def _g_replacement(z):
-    """Replaces g if z > _CUTOFF for numerical stability."""
-    return 0.5 * z ** 2
+def _g_replacement(z, p=2):
+    """Replaces g if z > _CUTOFF_P[p] for numerical stability."""
+    return 1 / p * np.power(z, p)
 
 
-def _g_grad_orig(z):
-    return norm.pdf(z) / norm.cdf(-z)
+def _g_grad_orig(z, p=2):
+    return gennorm.pdf(z, beta=p, scale=np.sqrt(p)) / gennorm.cdf(
+        -z, beta=p, scale=np.sqrt(p)
+    )
+
+
+def _g_grad_replacement(z, p=2):
+    """Replaces g_grad if z > _CUTOFF_P[p] for numerical stability."""
+    return np.power(z, p - 1)
 
 
 # this is the value where _g and _g_grad use the lower tails instead of the
 # exact implementation for numerical reasons
-_CUTOFF = 35
-_G_DIFF = _g_orig(_CUTOFF) - _g_replacement(_CUTOFF)
-_G_GRAD_DIFF = _g_grad_orig(_CUTOFF) - _CUTOFF
+def _CUTOFF_P(p):
+    if p <= 2:
+        return 35
+    else:
+        return 15
 
 
-def _g(z: np.ndarray):
+def _G_DIFF_P(p):
+    return _g_orig(_CUTOFF_P(p), p) - _g_replacement(_CUTOFF_P(p), p)
+
+
+def _G_GRAD_DIFF_P(p):
+    return _g_grad_orig(_CUTOFF_P(p), p) - _g_grad_replacement(_CUTOFF_P(p), p)
+
+
+def _g(z: np.ndarray, p=2):
     results = np.empty(z.shape)
-    greater = z > _CUTOFF
-    results[greater] = _G_DIFF + _g_replacement(z[greater])
-    results[~greater] = _g_orig(z[~greater])
+    greater = z > _CUTOFF_P(p)
+    results[greater] = _G_DIFF_P(p) + _g_replacement(z[greater], p)
+    results[~greater] = _g_orig(z[~greater], p)
     return results
 
 
-def _g_grad(z: np.ndarray):
+def _g_grad(z: np.ndarray, p=2):
     results = np.empty(z.shape)
-    greater = z > _CUTOFF
-    results[greater] = _G_GRAD_DIFF + z[greater]
-    results[~greater] = _g_grad_orig(z[~greater])
+    greater = z > _CUTOFF_P(p)
+    results[greater] = _G_GRAD_DIFF_P(p) + _g_grad_replacement(z[greater], p)
+    results[~greater] = _g_grad_orig(z[~greater], p)
     return results
 
 
