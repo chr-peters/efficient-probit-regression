@@ -101,7 +101,7 @@ def _CUTOFF_P(p):
     if p <= 2:
         return 35
     else:
-        return 15
+        return 12
 
 
 def _G_DIFF_P(p):
