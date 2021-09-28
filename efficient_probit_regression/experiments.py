@@ -103,7 +103,7 @@ class BaseExperiment(abc.ABC):
         """
         X, y = self.dataset.get_X(), self.dataset.get_y()
         model = PGeneralizedProbitModel(p=self.p, X=X, y=y)
-        beta_opt = self.dataset.get_beta_opt()
+        beta_opt = self.dataset.get_beta_opt(p=self.p)
 
         def objective_function(beta):
             return model.negative_log_likelihood(beta)
