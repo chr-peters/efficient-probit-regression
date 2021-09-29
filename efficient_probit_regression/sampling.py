@@ -36,7 +36,7 @@ def uniform_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     return X[sample_indices], y[sample_indices]
 
 
-def fast_QR(X, k=1, p=2):
+def fast_QR(X, p=2):
     """
     Returns Q of a fast QR decomposition of X.
     """
@@ -65,6 +65,7 @@ def fast_QR(X, k=1, p=2):
     R_inv = np.linalg.inv(R)
 
     if p == 2:
+        k = 20
         g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(R_inv.shape[1], k))
         r = np.dot(R_inv, g)
         Q = np.dot(X, r)
@@ -210,7 +211,7 @@ def logit_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     R = np.linalg.qr(X_sketch, mode="r")
     R_inv = np.linalg.inv(R)
 
-    k = 1
+    k = 20
     g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(R_inv.shape[1], k))
     r = np.dot(R_inv, g)
     Q = np.dot(X, r)
