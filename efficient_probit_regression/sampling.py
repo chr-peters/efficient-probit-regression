@@ -188,6 +188,51 @@ def _round_up(x: np.ndarray) -> np.ndarray:
     return results
 
 
+def logit_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
+    """
+    Logit sampling from 2018 Paper On Coresets for Logistic Regression.
+
+    Returns X_reduced, y_reduced, weights
+    """
+
+    # 1. Obtain fast QR approximation
+    n, d = X.shape
+
+    sketch_size = d ** 2
+
+    f = np.random.randint(sketch_size, size=n)
+    g = np.random.randint(2, size=n) * 2 - 1
+
+    X_sketch = np.zeros((sketch_size, d))
+    for i in range(n):
+        X_sketch[f[i]] += g[i] * X[i]
+
+    R = np.linalg.qr(X_sketch, mode="r")
+    R_inv = np.linalg.inv(R)
+
+    k = 1
+    g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(R_inv.shape[1], k))
+    r = np.dot(R_inv, g)
+    Q = np.dot(X, r)
+
+    # 2. Obtain square roots of leverage scores and add 1/n term
+    scores = np.linalg.norm(Q, axis=1) + 1 / n
+
+    # 3. draw a random sample
+    p = scores / np.sum(scores)
+
+    w = 1 / (p * sample_size)
+
+    sample_indices = _rng.choice(
+        X.shape[0],
+        size=sample_size,
+        replace=False,
+        p=p,
+    )
+
+    return X[sample_indices], y[sample_indices], w[sample_indices]
+
+
 def leverage_score_sampling(
     X: np.ndarray,
     y: np.ndarray,

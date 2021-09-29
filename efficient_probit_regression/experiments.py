@@ -15,6 +15,7 @@ from .sampling import (
     compute_leverage_scores_online,
     gibbs_sampler_probit,
     leverage_score_sampling,
+    logit_sampling,
     online_ridge_leverage_score_sampling,
     uniform_sampling,
 )
@@ -335,6 +336,20 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             round_up=self.round_up,
             p=self.p,
             fast_approx=self.fast_approx,
+        )
+
+        return X_reduced, y_reduced, weights
+
+
+class LogitSamplingExperiment(BaseExperiment):
+    def get_reduced_X_y_weights(self, config):
+        X, y = self.dataset.get_X(), self.dataset.get_y()
+        size = config["size"]
+
+        X_reduced, y_reduced, weights = logit_sampling(
+            X=X,
+            y=y,
+            sample_size=size,
         )
 
         return X_reduced, y_reduced, weights
