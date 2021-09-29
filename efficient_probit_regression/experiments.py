@@ -283,7 +283,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         online=False,
         round_up=True,
         fast_approx=False,
-        add_exponential=False,
     ):
         super().__init__(
             p=p,
@@ -298,7 +297,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         self.online = online
         self.round_up = round_up
         self.fast_approx = fast_approx
-        self.add_exponential = add_exponential
 
     def run(self, **kwargs):
         if self.only_compute_once:
@@ -313,7 +311,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
                     self.dataset.get_X(),
                     p=self.p,
                     fast_approx=self.fast_approx,
-                    add_exponential=self.add_exponential,
                 )
             _logger.info("Done.")
 
@@ -338,7 +335,6 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
             round_up=self.round_up,
             p=self.p,
             fast_approx=self.fast_approx,
-            add_exponential=self.add_exponential,
         )
 
         return X_reduced, y_reduced, weights

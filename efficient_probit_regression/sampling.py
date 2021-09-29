@@ -36,45 +36,51 @@ def uniform_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     return X[sample_indices], y[sample_indices]
 
 
-def fast_QR(X, k=1, add_exponential=False, p=2):
+def fast_QR(X, k=1, p=2):
     """
     Returns Q of a fast QR decomposition of X.
     """
     n, d = X.shape
-    f = np.random.randint(d ** 2, size=n)
+
+    if p <= 2:
+        sketch_size = d ** 2
+    else:
+        sketch_size = int(np.power(n, 1 - 2 / p))
+
+    f = np.random.randint(sketch_size, size=n)
     g = np.random.randint(2, size=n) * 2 - 1
 
     # init the sketch
-    X_ = np.zeros((d ** 2, d))
-    if not add_exponential:
+    X_sketch = np.zeros((sketch_size, d))
+    if p == 2:
         for i in range(n):
-            X_[f[i]] += g[i] * X[i]
+            X_sketch[f[i]] += g[i] * X[i]
     else:
         for i in range(n):
             lamb = expon.rvs()
-            X_[f[i]] += g[i] / np.power(lamb, 1 / p) * X[i]
+            X_sketch[f[i]] += g[i] / np.power(lamb, 1 / p) * X[i]
 
-    R_ = np.linalg.qr(X_, mode="r")
-    R_inv = np.linalg.inv(R_)
+    R = np.linalg.qr(X_sketch, mode="r")
+    R_inv = np.linalg.inv(R)
 
-    n, d = R_inv.shape
-    g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(d, k))
-    r = np.dot(R_inv, g)
-    Q_ = np.dot(X, r)
+    if p == 2:
+        g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(R_inv.shape[1], k))
+        r = np.dot(R_inv, g)
+        Q = np.dot(X, r)
+    else:
+        Q = np.dot(X, R_inv)
 
-    return Q_
+    return Q
 
 
-def compute_leverage_scores(
-    X: np.ndarray, p=2, fast_approx=False, add_exponential=False
-):
+def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):
     if not len(X.shape) == 2:
         raise ValueError("X must be 2D!")
 
     if not fast_approx:
         Q, *_ = np.linalg.qr(X)
     else:
-        Q = fast_QR(X, add_exponential=add_exponential, p=p)
+        Q = fast_QR(X, p=p)
 
     leverage_scores = np.power(np.linalg.norm(Q, axis=1, ord=p), p)
 
@@ -191,7 +197,6 @@ def leverage_score_sampling(
     precomputed_scores: np.ndarray = None,
     p=2,
     fast_approx=False,
-    add_exponential=False,
 ):
     """
     Draw a leverage score weighted sample of X and y without replacement.
@@ -225,9 +230,7 @@ def leverage_score_sampling(
         if online:
             leverage_scores = compute_leverage_scores_online(X)
         else:
-            leverage_scores = compute_leverage_scores(
-                X, p=p, fast_approx=fast_approx, add_exponential=add_exponential
-            )
+            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)
     else:
         leverage_scores = precomputed_scores
 
