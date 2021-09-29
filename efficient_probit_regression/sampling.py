@@ -49,6 +49,8 @@ def fast_QR(X, k=1, p=2):
 
     f = np.random.randint(sketch_size, size=n)
     g = np.random.randint(2, size=n) * 2 - 1
+    if p != 2:
+        lamb = expon.rvs(size=n)
 
     # init the sketch
     X_sketch = np.zeros((sketch_size, d))
@@ -57,8 +59,7 @@ def fast_QR(X, k=1, p=2):
             X_sketch[f[i]] += g[i] * X[i]
     else:
         for i in range(n):
-            lamb = expon.rvs()
-            X_sketch[f[i]] += g[i] / np.power(lamb, 1 / p) * X[i]
+            X_sketch[f[i]] += g[i] / np.power(lamb[i], 1 / p) * X[i]
 
     R = np.linalg.qr(X_sketch, mode="r")
     R_inv = np.linalg.inv(R)
