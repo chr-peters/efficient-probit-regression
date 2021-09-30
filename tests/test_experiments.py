@@ -8,6 +8,7 @@ from efficient_probit_regression.experiments import (
     LeverageScoreSamplingExperiment,
     LeverageScoreSamplingExperimentBayes,
     LewisSamplingExperiment,
+    LogitSamplingExperiment,
     OnlineLeverageScoreSamplingExperimentBayes,
     OnlineRidgeLeverageScoreSamplingExperiment,
     SGDExperiment,
@@ -37,6 +38,7 @@ class ExampleDataset(BaseDataset):
         LewisSamplingExperiment,
         OnlineRidgeLeverageScoreSamplingExperiment,
         SGDExperiment,
+        LogitSamplingExperiment,
     ],
 )
 @pytest.mark.parametrize("p", [1, 2, 3])
