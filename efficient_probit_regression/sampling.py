@@ -45,7 +45,7 @@ def fast_QR(X, p=2):
     if p <= 2:
         sketch_size = d ** 2
     else:
-        sketch_size = int(np.power(n, 1 - 2 / p))
+        sketch_size = np.maximum(d ** 2, int(np.power(n, 1 - 2 / p)))
 
     f = np.random.randint(sketch_size, size=n)
     g = np.random.randint(2, size=n) * 2 - 1
