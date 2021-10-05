@@ -12,6 +12,7 @@ from sklearn.datasets import (
     fetch_kddcup99,
     load_iris,
     load_svmlight_file,
+    make_blobs,
 )
 from sklearn.preprocessing import scale
 
@@ -372,5 +373,28 @@ class Iris(BaseDataset):
         X, y = load_iris(return_X_y=True)
         X = scale(X)
         y = np.where(y == 1, 1, -1)
+
+        return X, y
+
+
+class Example2D(BaseDataset):
+    def __init__(self):
+        super().__init__(add_intercept=True, use_caching=False)
+
+    def get_name(self):
+        return "example-2d"
+
+    def load_X_y(self):
+        centers = np.array([[-1, -1], [1, 1], [4.5, 5]])
+        X, y = make_blobs(
+            n_samples=[80, 80, 15],
+            n_features=2,
+            centers=centers,
+            cluster_std=[1, 1, 0.5],
+            random_state=1,
+        )
+        y = np.where(y == 2, 0, y)
+
+        y = 2 * y - 1
 
         return X, y
