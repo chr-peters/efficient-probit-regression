@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.sparse import diags
 
+from efficient_probit_regression.sampling import fast_QR
+
 
 def _calculate_lev_score_exact(X):
     Xt = X.T
@@ -28,14 +30,38 @@ def _calculate_lewis_weights_exact(X, T=20):
     return np.array(w + 1.0 / n, dtype=float)
 
 
+def _calculate_lewis_weights_fast(X, T=20):
+    n = X.shape[0]
+    w = np.ones(n)
+
+    for i in range(T):
+        # assert min(w) > 0, str(min(w))
+        Wp = diags(np.power(w, -0.5))
+
+        Q = fast_QR(Wp.dot(X), p=2)
+        s = np.power(np.linalg.norm(Q, axis=1, ord=2), 2)
+        w_nxt = np.power(w * s, 0.5)
+        # print("|w_t - w_t+1|/|w_t| = ", npl.norm(w - w_nxt) / npl.norm(w))
+        w = w_nxt
+
+    return np.array(w + 1.0 / n, dtype=float)
+
+
 def lewis_sampling(
-    X: np.ndarray, y: np.ndarray, sample_size: int, precomputed_weights=None
+    X: np.ndarray,
+    y: np.ndarray,
+    sample_size: int,
+    precomputed_weights=None,
+    fast_approx=False,
 ):
     """
     Returns X_reduced, y_reduced, probabilities
     """
     if precomputed_weights is None:
-        s = _calculate_lewis_weights_exact(X)
+        if fast_approx:
+            s = _calculate_lewis_weights_fast(X)
+        else:
+            s = _calculate_lewis_weights_exact(X)
     else:
         s = precomputed_weights
 

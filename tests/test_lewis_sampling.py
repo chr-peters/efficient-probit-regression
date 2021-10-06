@@ -11,3 +11,8 @@ def test_lewis_iris():
 
     assert X_reduced.shape == (50, 5)
     assert y_reduced.shape == (50,)
+
+    X_reduced, y_reduced, p = lewis_sampling(X, y, sample_size, fast_approx=True)
+
+    assert X_reduced.shape == (50, 5)
+    assert y_reduced.shape == (50,)

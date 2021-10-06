@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 
 from . import settings
 from .datasets import BaseDataset
-from .lewis_sampling import _calculate_lewis_weights_exact, lewis_sampling
+from .lewis_sampling import lewis_sampling
 from .probit_model import PGeneralizedProbitModel, PGeneralizedProbitSGD
 from .sampling import (
     compute_leverage_scores,
@@ -196,6 +196,7 @@ class LewisSamplingExperiment(BaseExperiment):
         step_size,
         dataset: BaseDataset,
         results_filename,
+        fast_approx=True,
     ):
         super().__init__(
             p=p,
@@ -206,15 +207,17 @@ class LewisSamplingExperiment(BaseExperiment):
             dataset=dataset,
             results_filename=results_filename,
         )
-        _logger.info("Computing lewis weights...")
-        self.precomputed_weights = _calculate_lewis_weights_exact(self.dataset.get_X())
+        self.fast_approx = fast_approx
 
     def get_reduced_X_y_weights(self, config):
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
 
         X_reduced, y_reduced, p = lewis_sampling(
-            X=X, y=y, sample_size=size, precomputed_weights=self.precomputed_weights
+            X=X,
+            y=y,
+            sample_size=size,
+            fast_approx=self.fast_approx,
         )
 
         weights = 1 / (p * size)
