@@ -1,8 +1,6 @@
 from efficient_probit_regression import settings
 from efficient_probit_regression.datasets import Covertype, KDDCup, Webspam  # noqa
-from efficient_probit_regression.experiments import UniformSamplingExperiment
-
-_logger = settings.get_logger()
+from efficient_probit_regression.experiments import LeverageScoreSamplingExperiment
 
 MIN_SIZE = 500
 MAX_SIZE = 15000
@@ -14,14 +12,13 @@ NUM_RUNS = 21
 # STEP_SIZE = 1000
 # NUM_RUNS = 21
 
-P = 1
+P = 2
 
 dataset = Covertype()
 # dataset = KDDCup()
 # dataset = Webspam()
 
-_logger.info("Starting uniform sampling experiment")
-experiment = UniformSamplingExperiment(
+experiment = LeverageScoreSamplingExperiment(
     p=P,
     min_size=MIN_SIZE,
     max_size=MAX_SIZE,
@@ -29,6 +26,9 @@ experiment = UniformSamplingExperiment(
     num_runs=NUM_RUNS,
     dataset=dataset,
     results_filename=settings.get_results_dir_p(P)
-    / f"{dataset.get_name()}_uniform_p_{P}.csv",
+    / f"{dataset.get_name()}_leverage_online_p_{P}.csv",
+    only_compute_once=True,
+    online=True,
+    round_up=True,
 )
 experiment.run(parallel=True)

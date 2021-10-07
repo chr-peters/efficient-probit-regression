@@ -14,9 +14,9 @@ NUM_RUNS = 21
 
 P = 1
 
-# dataset = Covertype()
+dataset = Covertype()
 # dataset = KDDCup()
-dataset = Webspam()
+# dataset = Webspam()
 
 experiment = LeverageScoreSamplingExperiment(
     p=P,

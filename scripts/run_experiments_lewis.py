@@ -14,9 +14,9 @@ NUM_RUNS = 21
 
 P = 1
 
-# dataset = Covertype()
+dataset = Covertype()
 # dataset = KDDCup()
-dataset = Webspam()
+# dataset = Webspam()
 
 experiment = LewisSamplingExperiment(
     p=P,
@@ -26,6 +26,6 @@ experiment = LewisSamplingExperiment(
     num_runs=NUM_RUNS,
     dataset=dataset,
     results_filename=settings.get_results_dir_p(P)
-    / f"{dataset.get_name()}_lewis_p_{P}.csv",
+    / f"{dataset.get_name()}_lewis-fast_p_{P}.csv",
 )
 experiment.run(parallel=True)
