@@ -197,14 +197,18 @@ def test_bayes_iris(ExperimentClass, tmp_path):
                 "beta_4",
                 "size",
                 "run",
+                "reduction_time_s",
+                "total_time_s",
             }
-            assert cur_df.shape == (600, 7)
+            assert cur_df.shape == (600, 9)
             assert set(cur_df["size"]) == {50, 75, 100}
             assert set(cur_df["run"]) == {cur_run}
+            assert np.all(cur_df["reduction_time_s"] > 0)
+            assert np.all(cur_df["total_time_s"] > 0)
 
             for cur_size in [50, 75, 100]:
                 sub_df = cur_df.loc[cur_df["size"] == cur_size]
-                assert sub_df.shape == (200, 7)
+                assert sub_df.shape == (200, 9)
 
     assert_all_ok([1, 2, 3])
 

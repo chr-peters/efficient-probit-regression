@@ -460,11 +460,17 @@ class BaseExperimentBayes(abc.ABC):
                     f"METHOD: {self.get_method_name()} - RUN: {cur_run} - SIZE: {cur_size}"  # noqa
                 )
                 _logger.info("Reducing the data...")
+
+                start_time = perf_counter()
+
                 (
                     X_reduced,
                     y_reduced,
                     probabilities,
                 ) = self.get_reduced_X_y_probabilities(size=cur_size)
+
+                # the time it takes for the data reduction
+                reduction_time = perf_counter() - start_time
 
                 _logger.info(
                     f"Done. Running the Gibbs sampler with NUM_CHAINS: {self.num_chains} "  # noqa
@@ -482,8 +488,17 @@ class BaseExperimentBayes(abc.ABC):
                     probabilities=probabilities,
                 )
 
+                total_time = perf_counter() - start_time
+
                 _logger.info("Done.")
-                samples.append({"size": cur_size, "sample": cur_sample})
+                samples.append(
+                    {
+                        "size": cur_size,
+                        "sample": cur_sample,
+                        "reduction_time_s": reduction_time,
+                        "total_time_s": total_time,
+                    }
+                )
 
             # concatenate the samples to a dataframe
             df_list = []
@@ -494,6 +509,8 @@ class BaseExperimentBayes(abc.ABC):
                 )
                 cur_df["size"] = cur_sample["size"]
                 cur_df["run"] = cur_run
+                cur_df["reduction_time_s"] = cur_sample["reduction_time_s"]
+                cur_df["total_time_s"] = cur_sample["total_time_s"]
                 df_list.append(cur_df)
 
             df = pd.concat(df_list, ignore_index=True)
