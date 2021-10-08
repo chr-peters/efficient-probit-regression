@@ -175,6 +175,7 @@ def test_bayes_iris(ExperimentClass, tmp_path):
         prior_cov=10 * np.eye(dataset.get_d()),
         samples_per_chain=100,
         num_chains=2,
+        burn_in=50,
     )
     experiment.run(results_dir=tmp_path)
 

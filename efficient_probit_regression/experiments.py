@@ -405,6 +405,7 @@ class BaseExperimentBayes(abc.ABC):
         prior_cov: np.ndarray,
         samples_per_chain: int,
         num_chains: int,
+        burn_in: int,
     ):
         self.dataset = dataset
         self.num_runs = num_runs
@@ -415,6 +416,7 @@ class BaseExperimentBayes(abc.ABC):
         self.prior_cov = prior_cov
         self.samples_per_chain = samples_per_chain
         self.num_chains = num_chains
+        self.burn_in = burn_in
 
     @abc.abstractmethod
     def get_reduced_X_y_probabilities(self, size):
@@ -484,7 +486,7 @@ class BaseExperimentBayes(abc.ABC):
                     prior_cov=self.prior_cov,
                     num_samples=self.samples_per_chain,
                     num_chains=self.num_chains,
-                    burn_in=100,
+                    burn_in=self.burn_in,
                     probabilities=probabilities,
                 )
 
