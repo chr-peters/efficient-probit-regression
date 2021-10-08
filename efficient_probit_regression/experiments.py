@@ -536,14 +536,10 @@ class UniformSamplingExperimentBayes(BaseExperimentBayes):
 
 
 class LeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
-    precomputed_scores = None
-
     def get_method_name(self):
         return "leverage"
 
     def get_reduced_X_y_probabilities(self, size):
-        if self.precomputed_scores is None:
-            self.precomputed_scores = compute_leverage_scores(self.dataset.get_X())
 
         X_reduced, y_reduced, weights = leverage_score_sampling(
             X=self.dataset.get_X(),
@@ -552,7 +548,8 @@ class LeverageScoreSamplingExperimentBayes(BaseExperimentBayes):
             augmented=True,
             online=False,
             round_up=True,
-            precomputed_scores=self.precomputed_scores,
+            p=2,
+            fast_approx=True,
         )
 
         probabilities = 1 / (weights * size)
