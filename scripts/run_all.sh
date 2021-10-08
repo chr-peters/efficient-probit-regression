@@ -1,3 +1,0 @@
-python run_experiments_covertype.py
-python run_experiments_kddcup.py
-python run_experiments_webspam.py
