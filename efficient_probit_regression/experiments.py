@@ -149,6 +149,14 @@ class BaseExperiment(abc.ABC):
         _logger.info(f"Writing results to {self.results_filename}")
 
         df = pd.DataFrame(results)
+
+        # check if a file already exits
+        if Path(self.results_filename).exists():
+            df_existing = pd.read_csv(self.results_filename)
+            max_run = df_existing["run"].max()
+            df["run"] = df["run"] + max_run
+            df = pd.concat([df_existing, df], ignore_index=True)
+
         df.to_csv(self.results_filename, index=False)
 
         _logger.info("Done.")

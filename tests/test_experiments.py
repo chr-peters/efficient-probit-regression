@@ -82,6 +82,27 @@ def test_experiments(tmp_path, ExperimentClass, p, fast_approx):
     assert np.all(df["sampling_time_s"] > 0)
     assert np.all(df["total_time_s"] > 0)
 
+    # test that new results are appended to an existing file instead of overwriting it
+    experiment.run()
+
+    df = pd.read_csv(results_filename)
+
+    run_unique, run_counts = np.unique(df["run"], return_counts=True)
+    assert_array_equal(run_unique, [1, 2, 3, 4, 5, 6])
+    assert_array_equal(run_counts, [3, 3, 3, 3, 3, 3])
+
+    size_unique, size_counts = np.unique(df["size"], return_counts=True)
+    assert_array_equal(size_unique, [50, 75, 100])
+    assert_array_equal(size_counts, [6, 6, 6])
+
+    assert np.all(df["ratio"] >= 0.99)
+
+    assert np.sum(df["sampling_time_s"].isna()) == 0
+    assert np.sum(df["total_time_s"].isna()) == 0
+
+    assert np.all(df["sampling_time_s"] > 0)
+    assert np.all(df["total_time_s"] > 0)
+
 
 def test_uniform_sampling_reduction(tmp_path):
     dataset = ExampleDataset()
