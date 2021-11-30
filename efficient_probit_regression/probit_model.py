@@ -100,8 +100,10 @@ def _g_grad_replacement(z, p):
 def _CUTOFF_P(p):
     if p <= 2:
         return 35
-    elif p <= 4:
+    elif p <= 3:
         return 12
+    elif p <= 4:
+        return 7
     else:
         return 5
 
