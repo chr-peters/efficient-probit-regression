@@ -10,14 +10,6 @@ This is the documentation of our code base.
 
 .. toctree::
    :maxdepth: 2
+   :caption: API Documentation
 
    api
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

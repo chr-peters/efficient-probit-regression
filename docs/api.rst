@@ -1,11 +1,11 @@
-API
-===
+Efficient Probit Regression API
+===============================
 
 Here you can find the documentation of most of our functions and classes.
 
 
 Probit Model
---------
+------------
 
 .. automodule:: efficient_probit_regression.probit_model
    :members:
@@ -26,7 +26,7 @@ Datasets
 
 
 Experiments
---------
+-----------
 
 .. automodule:: efficient_probit_regression.experiments
    :members:
