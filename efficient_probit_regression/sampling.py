@@ -25,9 +25,11 @@ def uniform_sampling(X: np.ndarray, y: np.ndarray, sample_size: int):
     """
     Draw a uniform sample of X and y without replacement.
 
-    Returns
-    -------
-    X, y : Sample
+    :param X: A matrix of size (n, d).
+    :param y: A vector of size (n,).
+    :param sample_size: The size of the sample that should be drawn.
+
+    :return: The reduced sample (X_reduced, y_reduced).
     """
     _check_sample(X, y, sample_size)
 
@@ -242,34 +244,28 @@ def leverage_score_sampling(
     online: bool = False,
     round_up: bool = False,
     precomputed_scores: np.ndarray = None,
-    p=2,
-    fast_approx=False,
+    p: int = 2,
+    fast_approx: bool = False,
 ):
     """
     Draw a leverage score weighted sample of X and y without replacement.
 
-    Parameters
-    ----------
-    X : np.ndarray
-        Data Matrix
-    y : np.ndarray
-        Label vector
-    sample_size : int
-        Sample size
-    augmented : bool
-        Wether to add the additive 1 / |W| term
-    online : bool
-        Compute online leverage scores in one pass over the data
-    round_up : bool
-        Round the leverage scores up to the nearest power of two
-    precomputed_scores : np.ndarray
-        To avoid recomputing the leverage scores every time,
+    :param X: Data matrix.
+    :param y: Label vector.
+    :param sample_size: Sample size.
+    :param augmented: Whether to add the additive 1/W term,
+        where W is the sum of all weights.
+    :param online: Compute online leverage scores in one pass over the data.
+    :param round_up: Round the leverage scores up to the nearest power of two.
+    :param precomputed_scores: To avoid recomputing the leverage scores every time,
         pass the precomputed scores here.
+    :param p: The order of the p-generalized probit model.
+    :param fast_approx: Whether to use the fast leverage score approximation algorithm.
 
-    Returns
-    -------
-    X, y : Sample
-    w : New sample weights
+    :return:
+        :X_reduced: The reduced data matrix.
+        :y_reduced: The reduced label vector.
+        :w: The corresponding sample weights.
     """
     _check_sample(X, y, sample_size)
 
@@ -351,14 +347,9 @@ class ReservoirSampler:
     adapted here for row sampling of datasets consisting of a data matrix X
     and a label vector y.
 
-    Parameters
-    ----------
-    sample_size : int
-        Numer of rows in the resulting sample.
-
-    d : int
-        Second dimension of the sample.
-        The whole sample will have a dimension of sample_size x d.
+    :param sample_size: Number of rows in the resulting sample.
+    :param d: Second dimension of the sample.
+        The whole sample will have a dimension of (sample_size, d).
     """
 
     def __init__(self, sample_size: int, d: int):
