@@ -137,18 +137,17 @@ class PGeneralizedProbitSGD:
     Stochastic Gradient descent for probit regression.
     Adapts the learning rate in each iteration using inverse scaling.
 
-    Parameters:
-    -----------
-    initial_learning_rate : float, default = 0.1
-        The initial learning rate.
-
-    power_t : float, default = 0.5
-        Inverse scaling is used to adapt the learning rate in each iteration.
+    :param p: The order of the probit model.
+    :param initial_learning_rate: The initial learning rate.
+    :param power_t: Inverse scaling is used to adapt
+        the learning rate in each iteration.
         The update formula is
         learning_rate = initial_learning_rate / power(cur_iteration, power_t)
     """
 
-    def __init__(self, p, initial_learning_rate: float = 0.1, power_t: float = 0.5):
+    def __init__(
+        self, p: int, initial_learning_rate: float = 0.1, power_t: float = 0.5
+    ):
         self.p = p
         self.initial_learning_rate = initial_learning_rate
         self.power_t = power_t
