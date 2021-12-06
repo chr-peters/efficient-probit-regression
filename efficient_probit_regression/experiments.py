@@ -28,13 +28,13 @@ _rng = np.random.default_rng()
 class BaseExperiment(abc.ABC):
     def __init__(
         self,
-        p,
-        num_runs,
-        min_size,
-        max_size,
-        step_size,
+        p: int,
+        num_runs: int,
+        min_size: int,
+        max_size: int,
+        step_size: int,
         dataset: BaseDataset,
-        results_filename,
+        results_filename: str,
     ):
         self.num_runs = num_runs
         self.min_size = min_size
@@ -49,20 +49,6 @@ class BaseExperiment(abc.ABC):
         """
         Abstract method that each experiment overrides to return the reduced
         matrix X, label vector y and weights that correspond to an experimental config.
-
-        Parameters:
-        -----------
-        config : dict
-            The current experimental config.
-
-        Returns:
-        --------
-        X : np.ndarray
-            Reduced matrix X.
-        y : np.ndarray
-            Reduced label vector y.
-        w : np.ndarray
-            New weight vector.
         """
         pass
 
@@ -84,11 +70,6 @@ class BaseExperiment(abc.ABC):
     def optimize(self, X, y, w):
         """
         Optimize the Probit regression problem given by X, y and w.
-
-        Returns:
-        --------
-        beta_opt : np.ndarray
-            The optimal parameters.
         """
         try:
             model = PGeneralizedProbitModel(p=self.p, X=X, y=y, w=w)
@@ -265,11 +246,6 @@ class SGDExperiment(BaseExperiment):
     def optimize(self, X, y, w):
         """
         Applies SGD in one pass over the data.
-
-        Returns:
-        --------
-        params : np.ndarray
-            The parameters found by SGD.
         """
         n = X.shape[0]
         sgd = PGeneralizedProbitSGD(p=self.p)
