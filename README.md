@@ -1,1 +1,1 @@
-# efficient-probit-regression
+# Efficient Probit Regression
