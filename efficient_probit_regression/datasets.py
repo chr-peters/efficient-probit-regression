@@ -145,7 +145,12 @@ class BaseDataset(abc.ABC):
         self._assert_data_loaded()
         return self.X.shape[1]
 
-    def get_beta_opt(self, p):
+    def get_beta_opt(self, p: int):
+        """The function get_beta_opt() returs the optimized/estimated parameters beta. 
+        
+        :param p: the order of the p-generalized probit-model.
+        
+        :return: returns the estimated parameters """
         if p not in self.beta_opt_dir.keys():
             self.beta_opt_dir[p] = self._get_beta_opt_cached(p)
 
