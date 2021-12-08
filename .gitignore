@@ -6,4 +6,8 @@ efficient_probit_regression.egg-info/
 
 docs/_build/
 
-venv/
+# my folder
+venv/  
+
+# saved results for later 
+.data-cache/    
