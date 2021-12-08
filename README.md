@@ -1,3 +1,3 @@
 # Efficient Probit Regression
 
-Willkommen zu unserem Code. Ich danke dem hervorragenden Team für ihren täglichen wissenschaftlichen Einsatz!
+Willkommen zu unserem Code. Wir danken dem hervorragenden Team für ihren täglichen wissenschaftlichen Einsatz!
