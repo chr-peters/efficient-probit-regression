@@ -129,6 +129,7 @@ class BaseDataset(abc.ABC):
         return self.cache_dir / f"{self.get_name()}_beta_opt_p_{p}.npy"
 
     def get_X(self):
+        """The function get_X() returns the data matrix from the data object."""
         self._assert_data_loaded()
         return self.X
 
