@@ -134,19 +134,22 @@ class BaseDataset(abc.ABC):
         return self.X
 
     def get_y(self):
+        """The function get_y returns the target data y."""
         self._assert_data_loaded()
         return self.y
 
     def get_n(self):
+        """The function get_n() returns the number of rows of the data."""
         self._assert_data_loaded()
         return self.X.shape[0]
 
     def get_d(self):
+        """The function get_d() returns the dimension of the data. d can also be regarded as the number of features."""
         self._assert_data_loaded()
         return self.X.shape[1]
 
     def get_beta_opt(self, p: int):
-        """The function get_beta_opt() returs the optimized/estimated parameters beta. 
+        """The function get_beta_opt() returns the optimized/estimated parameters beta. 
         
         :param p: the order of the p-generalized probit-model.
         
