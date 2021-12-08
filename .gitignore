@@ -5,3 +5,5 @@ efficient_probit_regression.egg-info/
 .coverage
 
 docs/_build/
+
+venv/
