@@ -13,5 +13,6 @@ setup(
         "scikit-learn",
         "scipy",
         "statsmodels",
+        "tqdm",   #progress bar
     ],
 )
