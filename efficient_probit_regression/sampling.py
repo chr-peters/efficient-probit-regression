@@ -5,6 +5,7 @@ from joblib import Parallel, delayed
 from scipy.stats import expon, multivariate_normal, norm, truncnorm
 from tqdm import tqdm
 
+# random number generator
 _rng = np.random.default_rng()
 
 
@@ -540,3 +541,12 @@ def gibbs_sampler_probit(
         samples = np.vstack(sample_chunks)
 
     return samples
+
+def SamuelSampling(X, y, samplesize):
+    """This function is just for an educational purpose inspired by my mentor Christian.
+    It returns the first 10 observations of a data set and ist obviously not a good data reduction method."""
+    return X[:10], y[:10]
+
+
+
+
