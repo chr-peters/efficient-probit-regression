@@ -134,7 +134,7 @@ class BaseDataset(abc.ABC):
         return self.X
 
     def get_y(self):
-        """The function get_y returns the target data y."""
+        """The function get_y() returns the target data y."""
         self._assert_data_loaded()
         return self.y
 

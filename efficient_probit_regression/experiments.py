@@ -165,6 +165,7 @@ class UniformSamplingExperiment(BaseExperiment):
         )
 
     def get_reduced_X_y_weights(self, config):
+        """The function get_reduced_X_y_weights() reduces the sample weights and returns them. (revision)"""
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
 

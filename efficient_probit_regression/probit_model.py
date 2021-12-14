@@ -26,6 +26,7 @@ class PGeneralizedProbitModel:
         self._params = None
 
     def negative_log_likelihood(self, params: np.ndarray):
+        """Returns negative Likelihood. (revison)"""
         self._check_params(params)
 
         return np.sum(self.w * _g(-self.y * np.dot(self.X, params), p=self.p))
@@ -39,6 +40,7 @@ class PGeneralizedProbitModel:
         return np.sum(Z * grad_vec, axis=0)
 
     def fit(self):
+        """The function fit() fits a model (revision)"""
         def fun(params):
             return self.negative_log_likelihood(params) / self.X.shape[0]
 
@@ -55,6 +57,7 @@ class PGeneralizedProbitModel:
         self._params = results.x
 
     def get_params(self):
+        """The function get_params() retuns the estimated parameters (revision)"""
         if self._params is None:
             raise AttributeError("Model must be fitted to get params!")
         return self._params
@@ -70,6 +73,7 @@ class ProbitModel(PGeneralizedProbitModel):
 
 
 def p_gen_norm_pdf(x, p):
+    """Generalized normal density function (revision)"""
     return gennorm.pdf(x, beta=p, scale=np.power(p, 1 / p))
 
 
@@ -156,6 +160,7 @@ class PGeneralizedProbitSGD:
         self._params = None
 
     def get_params(self):
+        """The function get_params() returns the estimated parameters. (revision)"""
         if self._params is None:
             raise AttributeError("Model must be fitted to get params!")
         return self._params

@@ -544,7 +544,7 @@ def gibbs_sampler_probit(
 
 def SamuelSampling(X, y, samplesize):
     """This function is just for an educational purpose inspired by my mentor Christian.
-    It returns the first 10 observations of a data set and ist obviously not a good data reduction method."""
+    It returns the first 10 observations of a data set and is obviously not a good data reduction method."""
     return X[:10], y[:10]
 
 
