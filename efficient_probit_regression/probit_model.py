@@ -73,11 +73,12 @@ class ProbitModel(PGeneralizedProbitModel):
 
 
 def p_gen_norm_pdf(x, p):
-    """Generalized normal density function (revision)"""
+    """Returns the densitiy at a point x for p>= 1."""
     return gennorm.pdf(x, beta=p, scale=np.power(p, 1 / p))
 
 
 def p_gen_norm_cdf(x, p):
+    """Returns the cumulative densitiy until a point x for p>= 1."""
     return gennorm.cdf(x, beta=p, scale=np.power(p, 1 / p))
 
 
@@ -160,6 +161,7 @@ class PGeneralizedProbitSGD:
         self._params = None
 
     def get_params(self):
+
         """The function get_params() returns the estimated parameters. (revision)"""
         if self._params is None:
             raise AttributeError("Model must be fitted to get params!")
