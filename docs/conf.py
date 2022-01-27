@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = "Efficient Probit Regression"
-copyright = "2021, Christian Peters"
-author = "Christian Peters"
+copyright = "2022, Christian Peters & Samuel Toporovskij"
+author = "Christian Peters & Samuel Toporovskij"
 
 # The full version, including alpha/beta/rc tags
 release = "0.1.0"
