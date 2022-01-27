@@ -45,7 +45,7 @@ def fast_QR(X, p=2):
     """
     n, d = X.shape
 
-    if p <= 2:
+    if p <= 2:    
         sketch_size = d ** 2
     else:
         sketch_size = np.maximum(d ** 2, int(np.power(n, 1 - 2 / p)))
@@ -57,35 +57,35 @@ def fast_QR(X, p=2):
 
     # init the sketch
     X_sketch = np.zeros((sketch_size, d))
-    if p == 2:
+    if p == 2:       
         for i in range(n):
             X_sketch[f[i]] += g[i] * X[i]
-    else:
+    else:    
         for i in range(n):
-            X_sketch[f[i]] += g[i] / np.power(lamb[i], 1 / p) * X[i]
+            X_sketch[f[i]] += g[i] / np.power(lamb[i], 1 / p) * X[i]  # exponential-verteile Zufallsvariable
 
     R = np.linalg.qr(X_sketch, mode="r")
     R_inv = np.linalg.inv(R)
 
-    if p == 2:
+    if p == 2:   # hier wird es noch verschnellert
         k = 20
         g = np.random.normal(loc=0, scale=1 / np.sqrt(k), size=(R_inv.shape[1], k))
         r = np.dot(R_inv, g)
         Q = np.dot(X, r)
-    else:
+    else:  # normalfall, der immer richtig ist
         Q = np.dot(X, R_inv)
 
     return Q
 
 
-def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):
+def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):  # hier werden die leverage scores berechnet (p-generalisierte )
     if not len(X.shape) == 2:
         raise ValueError("X must be 2D!")
 
-    if not fast_approx:
+    if not fast_approx: # boolean, schnellere oder nicht die schnellere Q-R-Zerlegung
         Q, *_ = np.linalg.qr(X)
     else:
-        Q = fast_QR(X, p=p)
+        Q = fast_QR(X, p=p)  # ein Möglichkeit wie man eine Zerlegung schneller machen kann
 
     leverage_scores = np.power(np.linalg.norm(Q, axis=1, ord=p), p)
 
@@ -274,24 +274,25 @@ def leverage_score_sampling(
         if online:
             leverage_scores = compute_leverage_scores_online(X)
         else:
-            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)
+            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)   # hier werden die leverage scores berechnet
     else:
         leverage_scores = precomputed_scores
 
     if augmented:
-        leverage_scores = leverage_scores + 1 / X.shape[0]
+        leverage_scores = leverage_scores + 1 / X.shape[0]     # per default false, sollte eigentlich true sein. an die scores wird noch ein (1/n) addiert 
 
     if round_up:
         leverage_scores = _round_up(leverage_scores)
 
     p = leverage_scores / np.sum(leverage_scores)
 
-    w = 1 / (p * sample_size)
-
-    sample_indices = _rng.choice(
+    w = 1 / (p * sample_size)  # new weights from Alex paper
+    
+    _rng = np.random.default_rng()   # Vermutung random function wurde oben einmalig initialisiert und somit seed beim paralleilisieren stets der gleiche? --> gleiche Zufallszahlen weerden gezogen
+    sample_indices = _rng.choice(   # _rng wie np.random
         X.shape[0],
         size=sample_size,
-        replace=False,
+        replace= False,       # vorher: replace = False bedeutet ohne Zurücklegen
         p=p,
     )
 

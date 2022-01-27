@@ -76,7 +76,7 @@ class BaseExperiment(abc.ABC):
             model.fit()
             beta_opt = model.get_params()
         except ValueError:
-            # this is executet if y only contains 1 or -1 label
+            # this is executed if y only contains 1 or -1 label
             beta_opt = None
         return beta_opt
 
@@ -88,14 +88,14 @@ class BaseExperiment(abc.ABC):
         model = PGeneralizedProbitModel(p=self.p, X=X, y=y)
         beta_opt = self.dataset.get_beta_opt(p=self.p)
 
-        def objective_function(beta):
+        def objective_function(beta):    # negative log likelihood
             return model.negative_log_likelihood(beta)
 
-        f_opt = objective_function(beta_opt)
+        f_opt = objective_function(beta_opt)  # f(beta_opt)
 
-        _logger.info("Running experiments...")
+        _logger.info("Running experiments...")    # instead of print. _logger is a little more detailed
 
-        def job_function(cur_config):
+        def job_function(cur_config):      # similar to worker
             _logger.info(f"Current experimental config: {cur_config}")
 
             start_time = perf_counter()
@@ -117,7 +117,7 @@ class BaseExperiment(abc.ABC):
                 "total_time_s": total_time,
             }
 
-        if parallel:
+        if parallel:     # parallelization
             results = Parallel(n_jobs=n_jobs)(
                 delayed(job_function)(cur_config)
                 for cur_config in self.get_config_grid()
@@ -131,7 +131,7 @@ class BaseExperiment(abc.ABC):
 
         df = pd.DataFrame(results)
 
-        # check if a file already exits
+        # check if a file already exits   (saving results independently)
         if Path(self.results_filename).exists():
             df_existing = pd.read_csv(self.results_filename)
             max_run = df_existing["run"].max()
