@@ -3,7 +3,7 @@
 [![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)
 
 This is the accompanying code repository for the International Conference on Artificial Intelligence and Statistics AISTATS 2022
-**Oblivious Sketching for Logistic Regression** by
+**p-Generalized Probit Regression and Scalable Maximum Likelihood Estimation via Sketching and Coresets** by
 **Alexander Munteanu**, **Simon Omlor** and **Christian Peters**.
 
 ## How to install
@@ -11,8 +11,10 @@ This is the accompanying code repository for the International Conference on Art
 1. Clone the repository and navigate into the new directory
 
    ```bash
-   git clone https://github.com/cxan96/oblivious-sketching-logreg
-   cd oblivious-sketching-logreg
+   ```diff
+   - git clone https://github.com/cxan96/efficient-probit-regression 
+   - cd efficient-probit-regression
+   ```
    ```
 
 2. Create and activate a new virtual environment
