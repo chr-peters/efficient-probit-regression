@@ -1,4 +1,4 @@
-# Oblivious Sketching for Logistic Regression
+# p-Generalized Probit Regression and Scalable Maximum Likelihood Estimation via Sketching and Coresets
 
 [![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)
 
