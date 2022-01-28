@@ -10,12 +10,11 @@ This is the accompanying code repository for the International Conference on Art
 
 1. Clone the repository and navigate into the new directory
 
-   ```bash
    ```diff
    - git clone https://github.com/cxan96/efficient-probit-regression 
    - cd efficient-probit-regression
    ```
-   ```
+
 
 2. Create and activate a new virtual environment
 
