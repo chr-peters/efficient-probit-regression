@@ -10,7 +10,7 @@ by **Alexander Munteanu**, **Simon Omlor** and **Christian Peters**.
 
 1. Clone the repository and navigate into the new directory
 
-   ```diff
+   ```bash
    - git clone https://github.com/cxan96/efficient-probit-regression 
    - cd efficient-probit-regression
    ```
