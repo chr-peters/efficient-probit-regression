@@ -26,7 +26,7 @@ by **Alexander Munteanu**, **Simon Omlor** and **Christian Peters**.
 3. Install the package locally
 
    ```bash
-   pip install .
+   pip install -e .
    ```
 
 4. To confirm that everything worked, install `pytest` and run the tests
