@@ -2,7 +2,7 @@
 
 [![python-version](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)](https://img.shields.io/badge/python-3.8%20%7C%203.9-blue)
 
-This is the accompanying code repository for the AISTATS 2022 publication 7
+This is the accompanying code repository for the AISTATS 2022 publication 
 **p-Generalized Probit Regression and Scalable Maximum Likelihood Estimation via Sketching and Coresets** 
 by **Alexander Munteanu**, **Simon Omlor** and **Christian Peters**.
 
