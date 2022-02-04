@@ -86,6 +86,9 @@ class BaseDataset(abc.ABC):
         return X, y
 
     def _compute_beta_opt(self, p):
+        """
+        Computes beta_opt.
+        """
         model = PGeneralizedProbitModel(p=p, X=self.get_X(), y=self.get_y())
         model.fit()
         beta_opt = model.get_params()
@@ -129,27 +132,27 @@ class BaseDataset(abc.ABC):
         return self.cache_dir / f"{self.get_name()}_beta_opt_p_{p}.npy"
 
     def get_X(self):
-        """The function get_X() returns the data matrix from the data object."""
+        """Returns the data matrix from the data object."""
         self._assert_data_loaded()
         return self.X
 
     def get_y(self):
-        """The function get_y() returns the target data y."""
+        """Returns the target data y."""
         self._assert_data_loaded()
         return self.y
 
     def get_n(self):
-        """The function get_n() returns the number of rows of the data."""
+        """Returns the number of rows of the data."""
         self._assert_data_loaded()
         return self.X.shape[0]
 
     def get_d(self):
-        """The function get_d() returns the dimension of the data. d can also be regarded as the number of features."""
+        """Returns the dimension of the data. d can also be regarded as the number of features."""
         self._assert_data_loaded()
         return self.X.shape[1]
 
     def get_beta_opt(self, p: int):
-        """The function get_beta_opt() returns the optimized/estimated parameters beta. 
+        """Returns the optimized/estimated parameters beta. 
         
         :param p: the order of the p-generalized probit-model.
         
@@ -183,6 +186,7 @@ class Covertype(BaseDataset):
         super().__init__(use_caching=use_caching)
 
     def get_name(self):
+        """ Returns name of the data set."""
         return "covertype"
 
     def load_X_y(self):
@@ -268,6 +272,7 @@ class KDDCup(BaseDataset):
         super().__init__(use_caching=use_caching)
 
     def get_name(self):
+        """ Returns name of data set."""
         return "kddcup"
 
     def load_X_y(self):
@@ -309,6 +314,7 @@ class Webspam(BaseDataset):
         super().__init__(use_caching=use_caching)
 
     def get_name(self):
+        """ Returns name of data set."""
         if self.drop_sparse_columns:
             return "webspam"
         else:
@@ -341,6 +347,7 @@ class Webspam(BaseDataset):
         df.to_csv(self.get_raw_path(), index=False)
 
     def load_X_y(self):
+        """ Loads data and returns X and y."""
         if not self.get_raw_path().exists():
             _logger.info(f"Couldn't find dataset at location {self.get_raw_path()}")
             self.download_dataset()
@@ -376,9 +383,11 @@ class Iris(BaseDataset):
         super().__init__(use_caching=use_caching)
 
     def get_name(self):
+        """" Returns name of data set."""
         return "iris"
 
     def load_X_y(self):
+        """ Loads data and returns X and y."""
         X, y = load_iris(return_X_y=True)
         X = scale(X)
         y = np.where(y == 1, 1, -1)
@@ -391,9 +400,11 @@ class Example2D(BaseDataset):
         super().__init__(add_intercept=True, use_caching=False)
 
     def get_name(self):
+        """ Returns name of data set."""
         return "example-2d"
 
     def load_X_y(self):
+        """ Loads data set and returns X and y."""
         centers = np.array([[-1, -1], [1, 1], [4.5, 5]])
         X, y = make_blobs(
             n_samples=[80, 80, 15],
