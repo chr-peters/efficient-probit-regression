@@ -78,8 +78,8 @@ def fast_QR(X, p=2):
     return Q
 
 
-def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):  # hier werden die leverage scores berechnet (p-generalisierte )
-        """
+def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):  
+    """
         Computes leverage scores.
     """
     if not len(X.shape) == 2:

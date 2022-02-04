@@ -26,7 +26,7 @@ class PGeneralizedProbitModel:
         self._params = None
 
     def negative_log_likelihood(self, params: np.ndarray):
-        """Returns negative Likelihood. (revison)"""
+        """Returns negative Likelihood."""
         self._check_params(params)
 
         return np.sum(self.w * _g(-self.y * np.dot(self.X, params), p=self.p))
@@ -40,7 +40,7 @@ class PGeneralizedProbitModel:
         return np.sum(Z * grad_vec, axis=0)
 
     def fit(self):
-        """The function fit() fits a model (revision)"""
+        """Fits a model."""
         def fun(params):
             return self.negative_log_likelihood(params) / self.X.shape[0]
 
