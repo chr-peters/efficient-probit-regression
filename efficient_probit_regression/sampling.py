@@ -79,6 +79,9 @@ def fast_QR(X, p=2):
 
 
 def compute_leverage_scores(X: np.ndarray, p=2, fast_approx=False):  # hier werden die leverage scores berechnet (p-generalisierte )
+        """
+        Computes leverage scores.
+    """
     if not len(X.shape) == 2:
         raise ValueError("X must be 2D!")
 
@@ -274,25 +277,25 @@ def leverage_score_sampling(
         if online:
             leverage_scores = compute_leverage_scores_online(X)
         else:
-            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)   # hier werden die leverage scores berechnet
+            leverage_scores = compute_leverage_scores(X, p=p, fast_approx=fast_approx)  
     else:
         leverage_scores = precomputed_scores
 
     if augmented:
-        leverage_scores = leverage_scores + 1 / X.shape[0]     # per default false, sollte eigentlich true sein. an die scores wird noch ein (1/n) addiert 
+        leverage_scores = leverage_scores + 1 / X.shape[0]    
 
     if round_up:
         leverage_scores = _round_up(leverage_scores)
 
     p = leverage_scores / np.sum(leverage_scores)
 
-    w = 1 / (p * sample_size)  # new weights from Alex paper
+    w = 1 / (p * sample_size)  
     
-    _rng = np.random.default_rng()   # Vermutung random function wurde oben einmalig initialisiert und somit seed beim paralleilisieren stets der gleiche? --> gleiche Zufallszahlen weerden gezogen
-    sample_indices = _rng.choice(   # _rng wie np.random
+    _rng = np.random.default_rng()    
+    sample_indices = _rng.choice(   # _rng (see np.random)
         X.shape[0],
         size=sample_size,
-        replace= False,       # vorher: replace = False bedeutet ohne Zurücklegen
+        replace= False,       # replace = False (without replacement)
         p=p,
     )
 
