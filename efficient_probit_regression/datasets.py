@@ -25,6 +25,7 @@ _rng = np.random.default_rng()
 
 
 def add_intercept(X):
+    """ Adds intercept."""
     return np.append(X, np.ones(shape=(X.shape[0], 1)), axis=1)
 
 
