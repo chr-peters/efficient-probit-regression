@@ -88,7 +88,7 @@ class BaseExperiment(abc.ABC):
         """
         Run the experiment.
 
-        :parallel = False: Parallelisation is set to False by default.
+        :parallel = False: parallel is set to False by default.
         :n_jobs = 4: n_jobs is set to 4 by default.
         """
         X, y = self.dataset.get_X(), self.dataset.get_y()
