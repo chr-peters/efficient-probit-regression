@@ -57,7 +57,7 @@ class PGeneralizedProbitModel:
         self._params = results.x
 
     def get_params(self):
-        """get_params() retuns the estimated parameters (revision)"""
+        """ Retuns the estimated parameters."""
         if self._params is None:
             raise AttributeError("Model must be fitted to get params!")
         return self._params
