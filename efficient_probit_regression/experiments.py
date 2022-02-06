@@ -70,6 +70,10 @@ class BaseExperiment(abc.ABC):
     def optimize(self, X, y, w):
         """
         Optimize the Probit regression problem given by X, y and w.
+
+        :param X: Data matrix.
+        :param y: Label vector.
+        :param w: Weights.
         """
         try:
             model = PGeneralizedProbitModel(p=self.p, X=X, y=y, w=w)
@@ -83,6 +87,9 @@ class BaseExperiment(abc.ABC):
     def run(self, parallel=False, n_jobs=4):
         """
         Run the experiment.
+
+        :parallel = False: Parallelisation is set to False by default.
+        :n_jobs = 4: n_jobs is set to 4 by default.
         """
         X, y = self.dataset.get_X(), self.dataset.get_y()
         model = PGeneralizedProbitModel(p=self.p, X=X, y=y)
@@ -165,7 +172,7 @@ class UniformSamplingExperiment(BaseExperiment):
         )
 
     def get_reduced_X_y_weights(self, config):
-        """The function get_reduced_X_y_weights() reduces the sample weights and returns them. (revision)"""
+        """Reduces the sample weights and returns them. """
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
 
@@ -200,6 +207,7 @@ class LewisSamplingExperiment(BaseExperiment):
         self.fast_approx = fast_approx
 
     def get_reduced_X_y_weights(self, config):
+        """ Returns reduced X, y and weights."""
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
 
@@ -306,6 +314,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
         super().run(**kwargs)
 
     def get_reduced_X_y_weights(self, config):
+        """ Returns reduced X, y and weights."""
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
 
@@ -330,6 +339,7 @@ class LeverageScoreSamplingExperiment(BaseExperiment):
 
 
 class LogitSamplingExperiment(BaseExperiment):
+    """ Returns reduced X, y and weights."""
     def get_reduced_X_y_weights(self, config):
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
@@ -365,6 +375,7 @@ class OnlineRidgeLeverageScoreSamplingExperiment(BaseExperiment):
         )
 
     def get_reduced_X_y_weights(self, config):
+        """ Returns reduced X, y and weights."""
         X, y = self.dataset.get_X(), self.dataset.get_y()
         size = config["size"]
 
